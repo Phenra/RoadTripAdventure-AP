@@ -49,11 +49,13 @@ Archipelago is a multi-game randomizer that can shuffle items from one game into
 Set the [setup guide](./docs/setup_en.md) for instructions.
 
 ## Frequently Asked Questions
-- Are there plans to add Q coins and Quick-Pic shops as items/locations?
-    - Yes! It's one of the higher-priority things on my list.
+- What versions of the game are supported?
+    - Currently, only NTSC-U.
 - Are there plans to support PAL and/or NTSC-J?
     - Maybe, TBD. If I do, it will likely be a while until they are supported.
     - Uncertain on NTSC-J support in particular, as it likely differs more from NTSC-U internally than PAL.
+- Are there plans to add Q coins and Quick-Pic shops as items/locations?
+    - Yes! It's one of the higher-priority things on my list.
 
 ## Known Issues
 - The game is not yet patched to prevent repurchases of AP items from part shops, even though repurchases will not send another check.
