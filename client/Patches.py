@@ -567,7 +567,7 @@ def encode_as_ascii_code_list(string : str) -> list[int]:
             codes.append(list(char.encode('ascii'))[0])
         # If a character is not a valid ASCII character, fall back to a space.
         except Exception:
-            codes.append(20) # 20 is a space in ASCII
+            codes.append(0x20) # 0x20 is a space in ASCII
     
     return codes
 

@@ -76,6 +76,7 @@ class RTAContext(CommonContext):
     save_id = None
     shop_strings = [] # List of PartDescriptions
     area_unlock_mode = None
+    remove_double_up_stamps = None
     reset_post_connect_patches = False
     quick_patch_check_failed = False
 
@@ -117,6 +118,7 @@ class RTAContext(CommonContext):
             self.save_id = args['slot_data']['save_id']
             self.shop_strings = args['slot_data']['shop_strings']
             self.area_unlock_mode = args['slot_data']['area_unlock_mode']
+            self.remove_double_up_stamps = args['slot_data']['remove_double_up_stamps']
 
             self.reset_post_connect_patches = True
 
@@ -583,7 +585,10 @@ async def check_shop_purchase_completions(ctx: RTAContext):
         await ctx.send_msgs([{"cmd": "LocationChecks", "locations": shop_completions}])
 
 async def check_NPC_reward_completions(ctx: RTAContext):
+    from ..locations import BASE_IDS as BASE_LOCATION_IDS
+
     table = Addresses.items_obtained
+    id = table.base_ID
     
     # Read from PCSX2 memory
     address = table.address
@@ -596,8 +601,12 @@ async def check_NPC_reward_completions(ctx: RTAContext):
     reward_completions = []
     for index in range(num_bytes * BITS_IN_BYTE):
         if is_bit_set(data, index, "little"):
-            print(ctx.location_names.lookup_in_game(index + table.base_ID))
-            reward_completions.append(index + table.base_ID)
+            if ctx.remove_double_up_stamps == True:
+                id += BASE_LOCATION_IDS.COMBINED
+            
+            print(ctx.location_names.lookup_in_game(index + id))
+        
+            reward_completions.append(index + id)
 
     # Send newly completed location checks to the AP server
     if reward_completions:

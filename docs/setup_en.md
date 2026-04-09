@@ -23,9 +23,9 @@ Once the [multiworld has been generated](https://archipelago.gg/tutorial/Archipe
 1. Boot Road Trip.
 2. Launch Archipelago, and run the Road Trip client.
     - If the Road Trip client is missing from the list, you likely do not have the .apworld file in the custom_worlds folder.
-3. You should see the message "**Road Trip AP memory patch successful!**" in the client.
-4. **While on the main menu in Road Trip**, click the 'Connect' button in the top-right of the client to connect to the server. 
-5. Once connected, you should see the message "**Patches requiring slot data successful!**" in the client.
+3. You should see the message "**RTA is in the main menu. Connect to the server before creating/loading a save!**" in the client.
+4. **While still on the main menu**, click the 'Connect' button in the top-right of the client to connect to the server. 
+5. Once connected, you should see the messages "**Road Trip AP memory patch successful!**" and "**Patches requiring slot data successful!**" in the client.
 6. Start a new game (or load the save you already started for this Archipelago seed).
 7. When you load into Q's Factory, you should see the message "**AP save loaded, you are ready to play!**" in the client.
     - If you instead see a message about the loaded save being vanilla, or for the wrong AP seed, you have likely loaded the wrong save, and will need to return to the main menu.
