@@ -1029,7 +1029,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
 
         # In stamp mode, display the number of AP stamp items received in the Stamps page in the Notebook
         # Part 1 - Write "AP stamps: " string
-        addr = 0x2DA630
+        addr = 0x2DA600
         pine.write_bytes(addr+0, bytes([0x41, 0x50, 0x20, 0x53]))
         pine.write_bytes(addr+4, bytes([0x74, 0x61, 0x6d, 0x70]))
         pine.write_bytes(addr+8, bytes([0x73, 0x3a, 0x20]))
@@ -1048,7 +1048,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+12, bytes([0x31, 0x2a, 0x84, 0x34]))
         pine.write_bytes(addr+16, bytes([0x00, 0x00, 0x84, 0x90]))
         pine.write_bytes(addr+20, bytes([0x2d, 0x00, 0x06, 0x3c]))
-        pine.write_bytes(addr+24, bytes([0x30, 0xa6, 0xc6, 0x34]))
+        pine.write_bytes(addr+24, bytes([0x00, 0xa6, 0xc6, 0x34]))
         pine.write_bytes(addr+28, bytes([0x0b, 0x00, 0xc0, 0xa0]))
         pine.write_bytes(addr+32, bytes([0x60, 0x6b, 0x0b, 0x0c]))
         pine.write_bytes(addr+36, bytes([0x64, 0x00, 0x05, 0x24]))

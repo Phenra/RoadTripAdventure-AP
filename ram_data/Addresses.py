@@ -43,6 +43,7 @@ FUNC_PTR_CURRENCY_INPUT = 0x26D628
 # NOTE: Beginning of email pointers: 0x2da0f0
 # NOTE: Beginning of email strings (much more space): 0x329458
 ADDR_TEMP_SHORTENED_PART_NAME = 0x2DA630
+ADDR_AP_STAMP_STRING = 0x2DA600
 ADDR_PART_SHOP_ITEM_CLASSIFICATIONS = 0x2DA650 #0x2DA110
 ADDR_SHOP_STRINGS = 0x329460
 OFFSET_SHOP_STRING_PLAYER_NAME = 42 # Max item name length is 41 characters + null terminator. Enforced by get_shop_strings, not Archipelago.
