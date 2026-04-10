@@ -47,9 +47,10 @@ from Utils import visualize_regions
 from .names import ItemName
 from .options import RoadTripOptions, get_RTA_options, AreaUnlockMode, FILLER_AMOUNT
 from .items import item_table, create_items_RTA, create_item_RTA
-from .locations import location_table, create_locations_RTA
+from .locations import location_table, create_locations_RTA, get_double_up_stamp_name, get_double_up_stamp_id
 from .regions import create_regions_RTA
 from .roomRando import room_rando_RTA
+from .categories import double_up_stamps
 
 # -------- Taken from APRaC2, needed for client ------------
 def run_client():
@@ -110,6 +111,18 @@ class RoadTripWorld(World):
     web = RoadTripWeb()
     item_name_to_id = {name: data.id for name, data in item_table.items()} # Required by Archipelago
     location_name_to_id = {name: data.id for name, data in location_table.items()} # Required by Archipelago
+    
+    # AP expects location_name_to_id to always contain all possible locations in the world.
+    # So even if the player does not enable Remove Double-Up Stamps, we need to add the double-up stamps to the dictionary.
+    #
+    # We used to do this in handle_double_up_stamps in locations.py, but apparently, this is too late, and
+    #   was causing the locations to display in the client and on the server as "Unknown Location" - even
+    #   though they were properly assigned to their IDs, and successfully sending from the game.
+    for npc_reward_name, stamp_name in double_up_stamps.items():
+        new_location_name = get_double_up_stamp_name(npc_reward_name, stamp_name)
+        new_ID = get_double_up_stamp_id(npc_reward_name)
+
+        location_name_to_id[new_location_name] = new_ID
 
     # Useful attributes provided by base World class, but not currently utilized by RTA AP:
     # item_name_groups = {}

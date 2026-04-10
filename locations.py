@@ -1379,6 +1379,12 @@ location_table = {
 # ------------------------------------------
 
 # Called by __init__.py
+def get_double_up_stamp_name(npc_reward_name : str, stamp_name : str):
+    return npc_reward_name + " / " + stamp_name
+
+def get_double_up_stamp_id(npc_reward_name : str):
+    return BASE_IDS.COMBINED + location_table[npc_reward_name].id
+
 def create_locations_RTA(world : World):
     from . import RoadTripLocation
 
@@ -1392,36 +1398,28 @@ def create_locations_RTA(world : World):
         return location
 
     def handle_double_up_stamps(world : World):
-        # Regardless of whether the 'remove double-up stamps' option is enabled or not, add the 'combined' locations 
-        #     that setting would use to the world's location_name_to_id list.
-        #
-        # Then, if double-up stamps have been disabled:
-        #   - Create new 'combined' Location that represents both the Stamp and its NPC reward.
-        #   - Update any category tables as needed to add the new combined Locations.
-        
-        for location_name, stamp_name in double_up_stamps.items():
-            new_location_name = location_name + " / " + stamp_name
-            new_ID = BASE_IDS.COMBINED + location_table[location_name].id
+        """ 
+        If double-up stamps have been disabled, creates a new 'combined' Location that represents both the Stamp and its NPC reward.
+        """
+        for npc_reward_name, stamp_name in double_up_stamps.items():
+            new_location_name = get_double_up_stamp_name(npc_reward_name, stamp_name)
+            new_ID = get_double_up_stamp_id(npc_reward_name)
             
-            # Add the new location to the world's 'location_name_to_id' and 'location_id_to_name' tables.
-            #
-            # Normally, we wouldn't ever need to update 'location_id_to_name', as AP creates it automatically
-            #     using the contents of 'location_name_to_id'. However, that reverse lookup is done
-            #     *when the world instance is created*. Since we're now updating it *after* instantiation,
-            #     we need to update both. 
-            #
-            # Also, we don't remove the old entries for locationName and stampName here - apparently, AP 
-            #     expects these tables to always contain all possible locations, even if they are not
-            #     enabled for the current world instance.
-            world.location_name_to_id[new_location_name] = new_ID
-            world.location_id_to_name[new_ID] = new_location_name
+            # We used to add the new location to the world's 'location_name_to_id' and 'location_id_to_name' tables
+            #    here (location_id_to_name is generated automatically, but is created prior to this function running,
+            #    so we needed to update it here as well). However, apparently this was too late, and was causing the
+            #    locations to display as "Unknown location" in the client and on the server (even though they
+            #    functioned correctly).
+            # These are now added when the world object is created in __init__.py
+            # world.location_name_to_id[new_location_name] = new_ID
+            # world.location_id_to_name[new_ID] = new_location_name
 
             if options.remove_double_up_stamps == True:
                 # Create new combined Location
                 location_data = LocationData(
                     id = new_ID,
-                    region = location_table[location_name].region,
-                    access_rule = location_table[location_name].access_rule
+                    region = location_table[npc_reward_name].region,
+                    access_rule = location_table[npc_reward_name].access_rule
                 )
                 location = create_location_RTA(new_location_name, location_data, world)
 
