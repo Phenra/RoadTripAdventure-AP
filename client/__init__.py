@@ -631,8 +631,8 @@ async def check_license_completions(ctx: RTAContext):
 
     for index in range(Addresses.NUM_LICENSES):
         if is_bit_set(data, index, "little"):
-            print(ctx.location_names.lookup_in_game(index + table.base_ID))
-            license_completions.append(index + table.base_ID)
+            print(ctx.location_names.lookup_in_game(index+1 + table.base_ID))
+            license_completions.append(index+1 + table.base_ID)
 
     # Send newly completed location checks to the AP server
     if license_completions:
