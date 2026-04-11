@@ -142,14 +142,14 @@ races_b_rank : dict[str, LocationData] = {
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
         ) or
-        {
+        (
             has_tires_of_level(1, state, player) and
             has_engine_of_level(6, state, player) and
             has_chassis_of_level(2, state, player) and
             has_transmission_of_level(2, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        } and
+        ) and
         has_license_count(1, state, player)
     ),
 
@@ -189,14 +189,14 @@ races_b_rank : dict[str, LocationData] = {
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
         ) or
-        {
+        (
             has_tires_of_level(9, state, player) and
             has_engine_of_level(5, state, player) and
             has_chassis_of_level(2, state, player) and
             has_transmission_of_level(2, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        } and
+        ) and
         has_license_count(1, state, player)
     ),
 
