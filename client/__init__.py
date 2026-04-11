@@ -602,7 +602,11 @@ async def check_NPC_reward_completions(ctx: RTAContext):
     for index in range(num_bytes * BITS_IN_BYTE):
         if is_bit_set(data, index, "little"):
             if ctx.remove_double_up_stamps == True:
-                id += BASE_LOCATION_IDS.COMBINED
+                # Test if a double-up stamp location exists for this bit
+                # If it does, use it instead
+                temp = ctx.location_names.lookup_in_game(index + id + BASE_LOCATION_IDS.COMBINED)
+                if "Unknown location" not in temp:
+                    index += BASE_LOCATION_IDS.COMBINED
             
             print(ctx.location_names.lookup_in_game(index + id))
         
