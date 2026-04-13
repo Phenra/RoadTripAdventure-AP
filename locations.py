@@ -652,9 +652,13 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_83: LocationData(BASE_IDS.STAMPS + 82, RegionName.Papaya_Island_Casa_House),
     LocationName.Stamp_84: LocationData(BASE_IDS.STAMPS + 83, RegionName.Papaya_Island_NPC_Minerva,
         access_rule = lambda state, player:
-            state.has(ItemName.Small_Bottle, player)    
+            state.has(ItemName.Small_Bottle, player)
     ),
-    LocationName.Stamp_85: LocationData(BASE_IDS.STAMPS + 84, RegionName.Base.Cloud_Hill),
+    LocationName.Stamp_85: LocationData(BASE_IDS.STAMPS + 84, RegionName.Base.Cloud_Hill,
+        access_rule = lambda state, player:
+            # Stamp 85 (Visited all the houses in Cloud Hill) includes the White House
+            state.can_reach_location(LocationName.World_GP_Completed, player)
+    ),
     LocationName.Stamp_86: LocationData(BASE_IDS.STAMPS + 85, RegionName.Cloud_Hill_NPC_Dust),
     LocationName.Stamp_87: LocationData(BASE_IDS.STAMPS + 86, RegionName.Cloud_Hill_NPC_Yumyum),
     LocationName.Stamp_88: LocationData(BASE_IDS.STAMPS + 87, RegionName.Cloud_Hill_Single_Lap_Race, # TODO: Add Single-Lap Race to challenge category?
