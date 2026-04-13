@@ -27,6 +27,8 @@ The item is immediately added to their inventory, and they receive a message in 
 Currently, only the NTSC-U release is supported. The PAL and NTSC-J releases may be supported in the future.
 
 ## What other changes are made to the game?
+The part shop in My City now serves as a way to rebuy items you've already received from the multiworld. It no longer sells parts based on which part shops you've visited, and no longer has any parts that it sells by default.
+
 Tin Raceway has been changed to a Rank A race in order to make it available as a Location. (In vanilla, it is only available post-game.) However, completing it is not required to complete the check for obtaining a Super-A license (i.e. only the vanilla Rank A races need to be completed).
 
 Additionally, the email system accessed via the garage has been disabled in order to free up enough room in memory for the randomizer patches.
