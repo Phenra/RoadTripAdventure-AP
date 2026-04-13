@@ -309,6 +309,10 @@ def hook_npc_rewards(pine : Pine):
     pine.write_bytes(0x2DA610, bytes([0x41, 0x50, 0x20, 0x49]))
     pine.write_bytes(0x2DA614, bytes([0x74, 0x65, 0x6d, 0x00]))
 
+    # Replace 'Body' string used when receiving a body from an NPC with just a double-quote
+    #     (since it needs to be there to be used as the opening quote in "AP Item")
+    pine.write_bytes(0x3338E8, bytes([0x22, 0x00]))
+
 def hook_overworld_item_funcs(pine : Pine):
     """
     Convert overworld items to AP locations. Also modify the code that decides whether to display them
