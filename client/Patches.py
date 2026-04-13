@@ -358,6 +358,13 @@ def hook_overworld_item_funcs(pine : Pine):
 
     for address in overworld_item_inventory_checks:
         pine.write_bytes(address, JAL_AP_LOCATION_FUNC_READ)
+        # All overworld items have a stamp check that will cause the item to not display if the stamp has
+        #     been received. For example, the Fountain Pen and Stamp 39, "Found Benji's Fountain Pen".
+        # This is done since items like the Fountain Pen are removed from your inventory when completing
+        #      the stamp, and the overworld item needs to stay invisible.
+        # Since these items and their locations are now separate for AP, we need to remove these stamp checks.
+        # All of them are four instructions (16 bytes) after the inventory checks.
+        pine.write_bytes(address+16, NOP_BYTES)
 
 
 def hook_license_upgrades(pine : Pine):

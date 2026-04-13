@@ -456,7 +456,10 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_13: LocationData(BASE_IDS.STAMPS + 12, RegionName.Fuji_City_Treasure_Hunting),
     LocationName.Stamp_14: LocationData(BASE_IDS.STAMPS + 13, RegionName.Fuji_City_Treasure_Hunting),
     LocationName.Stamp_15: LocationData(BASE_IDS.STAMPS + 14, RegionName.Fuji_City_Treasure_Hunting),
-    LocationName.Stamp_16: LocationData(BASE_IDS.STAMPS + 15, RegionName.Fuji_City_Castle_Sliding_Door_Race),
+    LocationName.Stamp_16: LocationData(BASE_IDS.STAMPS + 15, RegionName.Fuji_City_Castle_Sliding_Door_Race,
+        access_rule = lambda state, player:
+            can_clear_sliding_door_race(state, player)
+    ),
     LocationName.Stamp_17: LocationData(BASE_IDS.STAMPS + 16, RegionName.Fuji_City_Guarded_Dungeon),
     LocationName.Stamp_18: LocationData(BASE_IDS.STAMPS + 17, RegionName.Fuji_City_Iwasuke_House),
     LocationName.Stamp_19: LocationData(BASE_IDS.STAMPS + 18, RegionName.Fuji_City_Hakosuke_House),

@@ -219,6 +219,24 @@ def can_clear_highway_race(state: CollectionState, player: int) -> bool:
         has_brakes_of_level(1, state, player)
     )
 
+def can_clear_sliding_door_race(state: CollectionState, player: int) -> bool:
+    return (
+        (
+            has_tires_of_level(4, state, player) and
+            has_engine_of_level(6, state, player) and
+            has_chassis_of_level(2, state, player) and
+            has_transmission_of_level(2, state, player) and
+            has_steering_of_level(1, state, player) and
+            has_brakes_of_level(2, state, player)
+        ) or
+        (
+            state.has(ItemName.Jet_Turbine, player) and
+            has_tires_of_level(2, state, player) and
+            has_steering_of_level(1, state, player) and
+            has_brakes_of_level(2, state, player)
+        )
+    )
+
 def can_access_all_quick_pic_shops(state: CollectionState, player: int) -> bool:
     for shop in quick_pic_shops_list:
         if not state.can_reach_region(shop, player):
