@@ -98,7 +98,7 @@ races_b_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 1,
         region = RegionName.Peach_Town_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             has_tires_of_level(9, state, player) and
             has_engine_of_level(3, state, player) and
             has_chassis_of_level(1, state, player) and
@@ -113,7 +113,7 @@ races_b_rank : dict[str, LocationData] = {
             has_transmission_of_level(1, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        ) and
+        )) and
         has_license_count(1, state, player)
     ),
 
@@ -134,7 +134,7 @@ races_b_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 7,
         region = RegionName.Sandpolis_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             has_tires_of_level(6, state, player) and
             has_engine_of_level(4, state, player) and
             has_chassis_of_level(2, state, player) and
@@ -149,7 +149,7 @@ races_b_rank : dict[str, LocationData] = {
             has_transmission_of_level(2, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        ) and
+        )) and
         has_license_count(1, state, player)
     ),
 
@@ -181,7 +181,7 @@ races_b_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 16,
         region = RegionName.Mushroom_Road_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             has_tires_of_level(4, state, player) and
             has_engine_of_level(6, state, player) and
             has_chassis_of_level(2, state, player) and
@@ -196,7 +196,7 @@ races_b_rank : dict[str, LocationData] = {
             has_transmission_of_level(2, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        ) and
+        )) and
         has_license_count(1, state, player)
     ),
 
@@ -230,7 +230,7 @@ races_b_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 22,
         region = RegionName.Papaya_Island_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             state.count(ItemName.Propeller, player) > 1 and
             has_tires_of_level(1, state, player) and
             has_steering_of_level(2, state, player) and
@@ -243,7 +243,7 @@ races_b_rank : dict[str, LocationData] = {
             has_transmission_of_level(2, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        ) and
+        )) and
         has_license_count(1, state, player)
     ),
 }
@@ -314,7 +314,7 @@ races_a_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 13,
         region = RegionName.Chestnut_Canyon_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             has_tires_of_level(6, state, player) and
             has_engine_of_level(5, state, player) and
             has_chassis_of_level(3, state, player) and
@@ -329,7 +329,7 @@ races_a_rank : dict[str, LocationData] = {
             has_transmission_of_level(3, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(2, state, player)               
-        ) and
+        )) and
         has_license_count(2, state, player)
     ),
 
@@ -382,7 +382,7 @@ races_a_rank : dict[str, LocationData] = {
         id = BASE_IDS.RACES + 23,
         region = RegionName.Papaya_Island_Qs_Factory,
         access_rule = lambda state, player:
-        (
+        ((
             state.count(ItemName.Propeller, player) > 1 and
             has_tires_of_level(1, state, player) and
             has_steering_of_level(2, state, player) and
@@ -395,7 +395,7 @@ races_a_rank : dict[str, LocationData] = {
             has_transmission_of_level(3, state, player) and
             has_steering_of_level(2, state, player) and
             has_brakes_of_level(1, state, player)
-        ) and
+        )) and
         has_license_count(2, state, player)
     ),
 }
@@ -481,7 +481,7 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_27: LocationData(BASE_IDS.STAMPS + 26, RegionName.Sandpolis_Drag_Race, 
         access_rule = lambda state, player:
             has_tires_of_level(9, state, player) and
-            (
+            ((
                 has_engine_of_level(6, state, player) and
                 has_chassis_of_level(3, state, player)
             ) or
@@ -493,7 +493,7 @@ stamps : dict[str, LocationData] = {
                 has_engine_of_level(8, state, player) and
                 has_chassis_of_level(1, state, player) and
                 has_transmission_of_level(1, state, player)
-            )
+            ))
     ),
     LocationName.Stamp_28: LocationData(BASE_IDS.STAMPS + 27, RegionName.Sandpolis_Drag_Race, 
         access_rule = lambda state, player:
@@ -554,7 +554,8 @@ stamps : dict[str, LocationData] = {
     ),
     LocationName.Stamp_50: LocationData(BASE_IDS.STAMPS + 49, RegionName.Base.My_City,
         access_rule = lambda state, player:
-            can_access_everything_in_my_city(state, player)
+            can_access_everything_in_my_city(state, player) and
+            can_clear_endurance_run(state, player)
     ),
     LocationName.Stamp_51: LocationData(BASE_IDS.STAMPS + 50, RegionName.Base.My_City,
         access_rule = lambda state, player:
@@ -698,7 +699,7 @@ stamps : dict[str, LocationData] = {
         access_rule = lambda state, player:
             state.can_reach_location(LocationName.World_GP_Completed, player) and
             has_license_count(3, state, player) and
-            (
+            ((
                 state.has(ItemName.Jet_Turbine, player) and
                 has_tires_of_level(9, state, player) and
                 has_engine_of_level(5, state, player) and
@@ -714,7 +715,7 @@ stamps : dict[str, LocationData] = {
                 has_transmission_of_level(5, state, player) and
                 has_steering_of_level(3, state, player) and
                 has_brakes_of_level(3, state, player)
-            )
+            ))
     ),
 }
 
