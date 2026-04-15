@@ -24,6 +24,7 @@ def patch_rta_no_slot_data(pine : Pine, verification_run : bool = False):
         write_ap_location_func,
         hook_shop_purchases,
         hook_npc_rewards,
+        patch_npc_dialogue_triggers,
         hook_overworld_item_funcs,
         hook_license_upgrades,
 
@@ -32,6 +33,8 @@ def patch_rta_no_slot_data(pine : Pine, verification_run : bool = False):
 
         # Other patches
         patch_npc_equips,
+        disable_vanilla_my_city_part_shop_handling,
+        hook_game_continue_to_reset_my_city_part_shop,
         patch_tin_raceway_requirements,
         disable_func_that_overwrites_ap_save_data,
         # patch_bars_for_ap_hints(pine) # TODO
@@ -102,39 +105,36 @@ def hook_currency_input_to_init_ap_item_index(pine : Pine):
     pine.write_bytes(addr+8, bytes([0xAC, 0xFD, 0x29, 0x35])) # ori $t1, $t1, 0xFDAC (3529FDAC)
     pine.write_bytes(addr+12, bytes([0x00, 0x00, 0x28, 0xA1])) # sb $t0, 0($t1) (A1280000)
     
-    # Set boolean to indicate to the server that we are ready to receive the AP save index to 1 (at 0x2DA0F0)
+    # Set boolean (at 0x2DA0F0) to indicate to the server that we are ready to receive the AP save ID to 1
     pine.write_bytes(addr+16, bytes([0x2D, 0x00, 0x09, 0x3C])) # lui $t1, 0x2D (3C09002D)
     pine.write_bytes(addr+20, bytes([0xF0, 0xA0, 0x29, 0x35])) # ori $t1, $t1, 0xA0F0 (3529A0F0)
     pine.write_bytes(addr+24, bytes([0x00, 0x00, 0x28, 0xA1])) # sb $t0, 0($t1) (A1280000)
     
-    # Remove the default parts from the My City part shop
-    # The My City part shop has several parts that are always sold there, even if you've never received them.
-    #   Since My City's part shop is used exclusively for repurchasing parts you already own in AP, 
-    #   these are not locations in the multiworld.
-    #   Full list: HG Racing Tires, Speed MAX Engine, Wide Transmission, Spoke 7, Horse Horn, Train Horn
-    pine.write_bytes(addr+28, bytes([0x00, 0x00, 0x08, 0x24])) # addiu t0,zero,0x0 (24080000)
-    pine.write_bytes(addr+32, bytes([0x2d, 0x00, 0x09, 0x3c])) # lui t1,0x002D (3C09002D)
-    pine.write_bytes(addr+36, bytes([0x6c, 0xc7, 0x29, 0x35])) # ori t1,t1,0xC76C (3529C76C)
-    pine.write_bytes(addr+40, bytes([0x00, 0x00, 0x28, 0xa1])) # sb t0,0x0(t1) (A1280000)
-    pine.write_bytes(addr+44, bytes([0x05, 0x00, 0x28, 0xa1])) # sb t0,0x5(t1) (A1280005)
-    pine.write_bytes(addr+48, bytes([0x0c, 0x00, 0x28, 0xa1])) # sb t0,0xC(t1) (A128000C)
-    pine.write_bytes(addr+52, bytes([0x19, 0x00, 0x28, 0xa1])) # sb t0,0x19(t1) (A1280019)
-    pine.write_bytes(addr+56, bytes([0x31, 0x00, 0x28, 0xa1])) # sb t0,0x31(t1) (A1280031)
-    
-    # Overwrite function that handles vanilla part availability behavior for My City part shop
-    #   to a jr ra (i.e. do nothing).
-    # By default, all parts from part shops you have previously visited are available in My City.
-    pine.write_bytes(addr+60, bytes([0xe0, 0x03, 0x08, 0x3c])) # lui t0,0x03E0 (3C0803E0)
-    pine.write_bytes(addr+64, bytes([0x08, 0x00, 0x08, 0x35])) # ori t0,t0,0x8 (35080008)
-    pine.write_bytes(addr+68, bytes([0x26, 0x00, 0x09, 0x3c])) # lui t1,0x0026 (3C090026)
-    pine.write_bytes(addr+72, bytes([0x30, 0x7c, 0x29, 0x35])) # ori t1,t1,0x7C30 (35297C30)
-    pine.write_bytes(addr+76, bytes([0x00, 0x00, 0x28, 0xAD])) # sw t0, 0(t1) (AD280000)
-    pine.write_bytes(addr+80, bytes([0x04, 0x00, 0x20, 0xAD])) # sw zero, 4(t1) (AD200004)
+    # Set boolean (at 0x2DA0F1) to indicate to the server that we're ready to receive the current My City part shop inventory
+    pine.write_bytes(addr+28, bytes([0x01, 0x00, 0x28, 0xA1])) # sb $t0, 1($t1) (A1280000)
 
     # Now jump to the president Forest cutscene function (don't jal, our jal into this hook already set the ra register)
-    pine.write_bytes(addr+84, bytes([0xC2, 0x45, 0x08, 0x08])) # j 00211708 (080845C2)
-    pine.write_bytes(addr+88, NOP_BYTES) # nop (00000000)
+    pine.write_bytes(addr+32, bytes([0xC2, 0x45, 0x08, 0x08])) # j 00211708 (080845C2)
+    pine.write_bytes(addr+36, NOP_BYTES) # nop (00000000)
 
+
+def hook_game_continue_to_reset_my_city_part_shop(pine : Pine):
+    """
+    Hook the function that continues from a saved game to set the 'ready_for_my_city_part_shop_inventory' byte.
+    When the client sees this, it will set the parts sold at the My City part shop to the parts the player has
+    received so far from the multiworld.
+    """
+    # Change the jr ra to a j to our hook
+    pine.write_bytes(0x26d42c, bytes([0x80, 0x6B, 0x0B, 0x08])) # j 0x002DAE00
+
+    addr = 0x2DAE00
+    pine.write_bytes(addr+0, bytes([0x2d, 0x00, 0x08, 0x3c])) # lui $t0, 0x2D
+    pine.write_bytes(addr+4, bytes([0xf1, 0xa0, 0x08, 0x35])) # ori $t0, $t0, 0xA0F1
+    pine.write_bytes(addr+8, bytes([0x01, 0x00, 0x29, 0x25])) # addiu $t1, $t1, 0x1
+    pine.write_bytes(addr+12, bytes([0x00, 0x00, 0x09, 0xa1])) # sb $t1, 0($t0)
+    pine.write_bytes(addr+16, bytes([0x08, 0x00, 0xe0, 0x03])) # jr ra
+    pine.write_bytes(addr+20, bytes(NOP_BYTES))
+    
 
 def write_ap_location_func(pine : Pine):
     """
@@ -546,6 +546,17 @@ def patch_npc_equips(pine : Pine):
     pine.write_bytes(addr+48, NOP_BYTES)
 
 
+def patch_npc_dialogue_triggers(pine : Pine):
+    """
+    Patch some dialogue opcodes that would cause dialogue to be skipped if the player already has an item.
+    Not patching these would make some AP locations missable if the player receives the vanilla item for
+    that location prior to completing it.
+    """
+    # Patch Luke's dialogue for the UnbaboDoll. Normally, the dialogue where he would give you the doll
+    #   is skipped if you already have the stamp, *or* if you already have the item.
+    pine.write_bytes(0x315FC2, bytes([0x15, 0x49]))
+
+
 def patch_tin_raceway_requirements(pine : Pine):
     """
     Make Tin Raceway accessible prior to becoming the president so it can be a location check.
@@ -584,6 +595,16 @@ def encode_as_ascii_code_list(string : str) -> list[int]:
                 codes.append(0x20) # 0x20 is a space in ASCII
     
     return codes
+
+def disable_vanilla_my_city_part_shop_handling(pine : Pine):
+    """
+    Overwrite function that handles vanilla part availability behavior for My City part shop to a jr ra (i.e. do nothing).
+    In vanilla, all parts from part shops you have previously visited are available in My City.
+    """
+    addr = 0x267C30
+    pine.write_bytes(addr+0, bytes([0x08, 0x00, 0xe0, 0x03])) # jr ra
+    pine.write_bytes(addr+4, NOP_BYTES)
+
 
 def hook_shops_to_display_ap_item_strings(pine : Pine, shop_strings : list):
     """
@@ -830,6 +851,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
     MUSHROOM_ROAD = "Mushroom Road"
     PEACH_TOWN = "Peach Town"
     WHITE_MOUNTAIN = "White Mountain"
+    WHITE_MOUNTAIN_MAIN = "White Mountain Main" # Need to handle White Mountain proper separately due to Moonstone being in the chunk (which should be in-logic for Mushroom Road)
     WINDMILLS = "Windmills"
     PAPAYA_ISLAND = "Papaya Island"
     CLOUD_HILL = "Cloud Hill"
@@ -847,7 +869,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         NO_REGION,NO_REGION,NO_REGION,NO_REGION,
 
         # 0x20 through 0x2F
-        NO_REGION,WHITE_MOUNTAIN,NO_REGION,WHITE_MOUNTAIN,
+        NO_REGION,WHITE_MOUNTAIN,NO_REGION,WHITE_MOUNTAIN_MAIN,
         MUSHROOM_ROAD,WHITE_MOUNTAIN,FUJI_CITY,WINDMILLS,
         FUJI_CITY,PEACH_TOWN,PEACH_TOWN,PEACH_TOWN,
         NO_REGION,PEACH_TOWN,NO_REGION,PAPAYA_ISLAND,
@@ -887,6 +909,8 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
                 data += [0x1, 0x2]
             elif chunk == WHITE_MOUNTAIN:
                 data += [0x9, 0x12]
+            elif chunk == WHITE_MOUNTAIN_MAIN:
+                data += [0xFE, 0xFE]
             elif chunk == PAPAYA_ISLAND:
                 data += [0x13, 0x14]
             elif chunk == CLOUD_HILL:
@@ -907,7 +931,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+32, bytes([0x21, 0x48, 0x28, 0x01]))
         pine.write_bytes(addr+36, bytes([0x01, 0x00, 0x2a, 0x91]))
         pine.write_bytes(addr+40, bytes([0x00, 0x00, 0x29, 0x91]))
-        pine.write_bytes(addr+44, bytes([0x25, 0x00, 0x20, 0x11]))
+        pine.write_bytes(addr+44, bytes([0x34, 0x00, 0x20, 0x11]))
         pine.write_bytes(addr+48, bytes([0xff, 0x00, 0x0b, 0x34]))
         pine.write_bytes(addr+52, bytes([0x0d, 0x00, 0x2b, 0x15]))
         pine.write_bytes(addr+56, NOP_BYTES)
@@ -923,36 +947,51 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+96, bytes([0x23, 0x00, 0x08, 0x24]))
         pine.write_bytes(addr+100, bytes([0xeb, 0xff, 0x00, 0x10]))
         pine.write_bytes(addr+104, NOP_BYTES)
-        pine.write_bytes(addr+108, bytes([0x2d, 0x00, 0x0b, 0x3c]))
-        pine.write_bytes(addr+112, bytes([0x7f, 0xa5, 0x6b, 0x35]))
-        pine.write_bytes(addr+116, bytes([0x0f, 0x00, 0x04, 0x24]))
-        pine.write_bytes(addr+120, bytes([0x00, 0x00, 0x25, 0x25]))
-        pine.write_bytes(addr+124, bytes([0x22, 0xf5, 0x08, 0x0c]))
-        pine.write_bytes(addr+128, bytes([0x00, 0x00, 0x06, 0x24]))
-        pine.write_bytes(addr+132, bytes([0x0f, 0x00, 0x40, 0x14]))
-        pine.write_bytes(addr+136, bytes([0x0f, 0x00, 0x04, 0x24]))
-        pine.write_bytes(addr+140, bytes([0x00, 0x00, 0x45, 0x25]))
-        pine.write_bytes(addr+144, bytes([0x22, 0xf5, 0x08, 0x0c]))
-        pine.write_bytes(addr+148, bytes([0x00, 0x00, 0x06, 0x24]))
-        pine.write_bytes(addr+152, bytes([0x0a, 0x00, 0x40, 0x14]))
-        pine.write_bytes(addr+156, NOP_BYTES)
-        pine.write_bytes(addr+160, bytes([0x11, 0x00, 0x04, 0x24]))
-        pine.write_bytes(addr+164, bytes([0x07, 0x00, 0x05, 0x24]))
-        pine.write_bytes(addr+168, bytes([0x2d, 0x00, 0x06, 0x3c]))
-        pine.write_bytes(addr+172, bytes([0x20, 0xa6, 0xc6, 0x34]))
-        pine.write_bytes(addr+176, bytes([0x06, 0x00, 0x07, 0x24]))
-        pine.write_bytes(addr+180, bytes([0x00, 0x00, 0xbf, 0x8f]))
-        pine.write_bytes(addr+184, bytes([0x04, 0x00, 0xbd, 0x27]))
-        pine.write_bytes(addr+188, bytes([0xf2, 0x0f, 0x08, 0x08]))
-        pine.write_bytes(addr+192, bytes([0x00, 0x00, 0x62, 0xa1]))
-        pine.write_bytes(addr+196, bytes([0x00, 0x00, 0xbf, 0x8f]))
-        pine.write_bytes(addr+200, bytes([0x01, 0x00, 0x02, 0x24]))
-        pine.write_bytes(addr+204, bytes([0x2d, 0x00, 0x0b, 0x3c]))
-        pine.write_bytes(addr+208, bytes([0x7f, 0xa5, 0x6b, 0x35]))
-        pine.write_bytes(addr+212, bytes([0x04, 0x00, 0xbd, 0x27]))
-        pine.write_bytes(addr+216, bytes([0x08, 0x00, 0xe0, 0x03]))
-        pine.write_bytes(addr+220, bytes([0x00, 0x00, 0x62, 0xa1]))
-        pine.write_bytes(addr+224, NOP_BYTES)
+        pine.write_bytes(addr+108, bytes([0xfe, 0x00, 0x0b, 0x34]))
+        pine.write_bytes(addr+112, bytes([0x0d, 0x00, 0x2b, 0x15]))
+        pine.write_bytes(addr+116, NOP_BYTES)
+        pine.write_bytes(addr+120, bytes([0x77, 0x01, 0x0b, 0x3c]))
+        pine.write_bytes(addr+124, bytes([0xe0, 0xac, 0x6b, 0x35]))
+        pine.write_bytes(addr+128, bytes([0x0a, 0x00, 0x6b, 0x95]))
+        pine.write_bytes(addr+132, bytes([0x10, 0x43, 0x6b, 0x29]))
+        pine.write_bytes(addr+136, bytes([0x04, 0x00, 0x60, 0x15]))
+        pine.write_bytes(addr+140, NOP_BYTES)
+        pine.write_bytes(addr+144, bytes([0x25, 0x00, 0x08, 0x24]))
+        pine.write_bytes(addr+148, bytes([0xdf, 0xff, 0x00, 0x10]))
+        pine.write_bytes(addr+152, NOP_BYTES)
+        pine.write_bytes(addr+156, bytes([0x24, 0x00, 0x08, 0x24]))
+        pine.write_bytes(addr+160, bytes([0xdc, 0xff, 0x00, 0x10]))
+        pine.write_bytes(addr+164, NOP_BYTES)
+        pine.write_bytes(addr+168, bytes([0x2d, 0x00, 0x0b, 0x3c]))
+        pine.write_bytes(addr+172, bytes([0x7f, 0xa5, 0x6b, 0x35]))
+        pine.write_bytes(addr+176, bytes([0x0f, 0x00, 0x04, 0x24]))
+        pine.write_bytes(addr+180, bytes([0x00, 0x00, 0x25, 0x25]))
+        pine.write_bytes(addr+184, bytes([0x22, 0xf5, 0x08, 0x0c]))
+        pine.write_bytes(addr+188, bytes([0x00, 0x00, 0x06, 0x24]))
+        pine.write_bytes(addr+192, bytes([0x0f, 0x00, 0x40, 0x14]))
+        pine.write_bytes(addr+196, bytes([0x0f, 0x00, 0x04, 0x24]))
+        pine.write_bytes(addr+200, bytes([0x00, 0x00, 0x45, 0x25]))
+        pine.write_bytes(addr+204, bytes([0x22, 0xf5, 0x08, 0x0c]))
+        pine.write_bytes(addr+208, bytes([0x00, 0x00, 0x06, 0x24]))
+        pine.write_bytes(addr+212, bytes([0x0a, 0x00, 0x40, 0x14]))
+        pine.write_bytes(addr+216, NOP_BYTES)
+        pine.write_bytes(addr+220, bytes([0x11, 0x00, 0x04, 0x24]))
+        pine.write_bytes(addr+224, bytes([0x07, 0x00, 0x05, 0x24]))
+        pine.write_bytes(addr+228, bytes([0x2d, 0x00, 0x06, 0x3c]))
+        pine.write_bytes(addr+232, bytes([0x20, 0xa6, 0xc6, 0x34]))
+        pine.write_bytes(addr+236, bytes([0x06, 0x00, 0x07, 0x24]))
+        pine.write_bytes(addr+240, bytes([0x00, 0x00, 0xbf, 0x8f]))
+        pine.write_bytes(addr+244, bytes([0x04, 0x00, 0xbd, 0x27]))
+        pine.write_bytes(addr+248, bytes([0xf2, 0x0f, 0x08, 0x08]))
+        pine.write_bytes(addr+252, bytes([0x00, 0x00, 0x62, 0xa1]))
+        pine.write_bytes(addr+256, bytes([0x00, 0x00, 0xbf, 0x8f]))
+        pine.write_bytes(addr+260, bytes([0x01, 0x00, 0x02, 0x24]))
+        pine.write_bytes(addr+264, bytes([0x2d, 0x00, 0x0b, 0x3c]))
+        pine.write_bytes(addr+268, bytes([0x7f, 0xa5, 0x6b, 0x35]))
+        pine.write_bytes(addr+272, bytes([0x04, 0x00, 0xbd, 0x27]))
+        pine.write_bytes(addr+276, bytes([0x08, 0x00, 0xe0, 0x03]))
+        pine.write_bytes(addr+280, bytes([0x00, 0x00, 0x62, 0xa1]))
+        pine.write_bytes(addr+284, NOP_BYTES)
 
     elif area_unlock_mode == 1: # Stamps       
         # For stamp mode, the table values should contain the number of AP stamp items
@@ -976,6 +1015,8 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
                 data += [20, 0]
             elif chunk == WHITE_MOUNTAIN:
                 data += [25, 0]
+            elif chunk == WHITE_MOUNTAIN_MAIN:
+                data += [0xFE, 0x0]
             elif chunk == PAPAYA_ISLAND:
                 data += [30, 0]
             elif chunk == CLOUD_HILL:
@@ -997,7 +1038,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+32, bytes([0x21, 0x48, 0x28, 0x01]))
         pine.write_bytes(addr+36, NOP_BYTES)
         pine.write_bytes(addr+40, bytes([0x00, 0x00, 0x29, 0x91]))
-        pine.write_bytes(addr+44, bytes([0x22, 0x00, 0x20, 0x11]))
+        pine.write_bytes(addr+44, bytes([0x31, 0x00, 0x20, 0x11]))
         pine.write_bytes(addr+48, NOP_BYTES)
         pine.write_bytes(addr+52, bytes([0xff, 0x00, 0x0b, 0x34]))
         pine.write_bytes(addr+56, bytes([0x0d, 0x00, 0x2b, 0x15]))
@@ -1014,36 +1055,51 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+100, bytes([0x23, 0x00, 0x08, 0x24]))
         pine.write_bytes(addr+104, bytes([0xea, 0xff, 0x00, 0x10]))
         pine.write_bytes(addr+108, NOP_BYTES)
-        pine.write_bytes(addr+112, bytes([0x78, 0x01, 0x0b, 0x3c]))
-        pine.write_bytes(addr+116, bytes([0x31, 0x2a, 0x6b, 0x35]))
-        pine.write_bytes(addr+120, bytes([0x00, 0x00, 0x6b, 0x91]))
-        pine.write_bytes(addr+124, bytes([0x01, 0x00, 0x6b, 0x25]))
-        pine.write_bytes(addr+128, bytes([0x2a, 0x10, 0x2b, 0x01]))
-        pine.write_bytes(addr+132, bytes([0x2d, 0x00, 0x0b, 0x3c]))
-        pine.write_bytes(addr+136, bytes([0x7f, 0xa5, 0x6b, 0x35]))
-        pine.write_bytes(addr+140, bytes([0x0a, 0x00, 0x40, 0x14]))
+        pine.write_bytes(addr+112, bytes([0xfe, 0x00, 0x0b, 0x34]))
+        pine.write_bytes(addr+116, bytes([0x0d, 0x00, 0x2b, 0x15]))
+        pine.write_bytes(addr+120, NOP_BYTES)
+        pine.write_bytes(addr+124, bytes([0x77, 0x01, 0x0b, 0x3c]))
+        pine.write_bytes(addr+128, bytes([0xe0, 0xac, 0x6b, 0x35]))
+        pine.write_bytes(addr+132, bytes([0x0a, 0x00, 0x6b, 0x95]))
+        pine.write_bytes(addr+136, bytes([0x10, 0x43, 0x6b, 0x29]))
+        pine.write_bytes(addr+140, bytes([0x04, 0x00, 0x60, 0x15]))
         pine.write_bytes(addr+144, NOP_BYTES)
-        pine.write_bytes(addr+148, bytes([0x11, 0x00, 0x04, 0x24]))
-        pine.write_bytes(addr+152, bytes([0x07, 0x00, 0x05, 0x24]))
-        pine.write_bytes(addr+156, bytes([0x2d, 0x00, 0x06, 0x3c]))
-        pine.write_bytes(addr+160, bytes([0x20, 0xa6, 0xc6, 0x34]))
-        pine.write_bytes(addr+164, bytes([0x06, 0x00, 0x07, 0x24]))
-        pine.write_bytes(addr+168, bytes([0x00, 0x00, 0xbf, 0x8f]))
-        pine.write_bytes(addr+172, bytes([0x04, 0x00, 0xbd, 0x27]))
-        pine.write_bytes(addr+176, bytes([0xf2, 0x0f, 0x08, 0x08]))
-        pine.write_bytes(addr+180, bytes([0x00, 0x00, 0x62, 0xa1]))
-        pine.write_bytes(addr+184, bytes([0x00, 0x00, 0xbf, 0x8f]))
-        pine.write_bytes(addr+188, bytes([0x01, 0x00, 0x02, 0x24]))
+        pine.write_bytes(addr+148, bytes([0x25, 0x00, 0x08, 0x24]))
+        pine.write_bytes(addr+152, bytes([0xde, 0xff, 0x00, 0x10]))
+        pine.write_bytes(addr+156, NOP_BYTES)
+        pine.write_bytes(addr+160, bytes([0x24, 0x00, 0x08, 0x24]))
+        pine.write_bytes(addr+164, bytes([0xdb, 0xff, 0x00, 0x10]))
+        pine.write_bytes(addr+168, NOP_BYTES)
+        pine.write_bytes(addr+172, bytes([0x78, 0x01, 0x0b, 0x3c]))
+        pine.write_bytes(addr+176, bytes([0x31, 0x2a, 0x6b, 0x35]))
+        pine.write_bytes(addr+180, bytes([0x00, 0x00, 0x6b, 0x91]))
+        pine.write_bytes(addr+184, bytes([0x01, 0x00, 0x6b, 0x25]))
+        pine.write_bytes(addr+188, bytes([0x2a, 0x10, 0x2b, 0x01]))
         pine.write_bytes(addr+192, bytes([0x2d, 0x00, 0x0b, 0x3c]))
         pine.write_bytes(addr+196, bytes([0x7f, 0xa5, 0x6b, 0x35]))
-        pine.write_bytes(addr+200, bytes([0x04, 0x00, 0xbd, 0x27]))
-        pine.write_bytes(addr+204, bytes([0x08, 0x00, 0xe0, 0x03]))
-        pine.write_bytes(addr+208, bytes([0x00, 0x00, 0x62, 0xa1]))
-        pine.write_bytes(addr+212, NOP_BYTES)
+        pine.write_bytes(addr+200, bytes([0x0a, 0x00, 0x40, 0x14]))
+        pine.write_bytes(addr+204, NOP_BYTES)
+        pine.write_bytes(addr+208, bytes([0x11, 0x00, 0x04, 0x24]))
+        pine.write_bytes(addr+212, bytes([0x07, 0x00, 0x05, 0x24]))
+        pine.write_bytes(addr+216, bytes([0x2d, 0x00, 0x06, 0x3c]))
+        pine.write_bytes(addr+220, bytes([0x20, 0xa6, 0xc6, 0x34]))
+        pine.write_bytes(addr+224, bytes([0x06, 0x00, 0x07, 0x24]))
+        pine.write_bytes(addr+228, bytes([0x00, 0x00, 0xbf, 0x8f]))
+        pine.write_bytes(addr+232, bytes([0x04, 0x00, 0xbd, 0x27]))
+        pine.write_bytes(addr+236, bytes([0xf2, 0x0f, 0x08, 0x08]))
+        pine.write_bytes(addr+240, bytes([0x00, 0x00, 0x62, 0xa1]))
+        pine.write_bytes(addr+244, bytes([0x00, 0x00, 0xbf, 0x8f]))
+        pine.write_bytes(addr+248, bytes([0x01, 0x00, 0x02, 0x24]))
+        pine.write_bytes(addr+252, bytes([0x2d, 0x00, 0x0b, 0x3c]))
+        pine.write_bytes(addr+256, bytes([0x7f, 0xa5, 0x6b, 0x35]))
+        pine.write_bytes(addr+260, bytes([0x04, 0x00, 0xbd, 0x27]))
+        pine.write_bytes(addr+264, bytes([0x08, 0x00, 0xe0, 0x03]))
+        pine.write_bytes(addr+268, bytes([0x00, 0x00, 0x62, 0xa1]))
+        pine.write_bytes(addr+272, NOP_BYTES)
 
         # In stamp mode, display the number of AP stamp items received in the Stamps page in the Notebook
         # Part 1 - Write "AP stamps: " string
-        addr = 0x2DA600
+        addr = 0x2DAE80 # Ran out of room in the other location, moving lower
         pine.write_bytes(addr+0, bytes([0x41, 0x50, 0x20, 0x53]))
         pine.write_bytes(addr+4, bytes([0x74, 0x61, 0x6d, 0x70]))
         pine.write_bytes(addr+8, bytes([0x73, 0x3a, 0x20]))
@@ -1062,7 +1118,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
         pine.write_bytes(addr+12, bytes([0x31, 0x2a, 0x84, 0x34]))
         pine.write_bytes(addr+16, bytes([0x00, 0x00, 0x84, 0x90]))
         pine.write_bytes(addr+20, bytes([0x2d, 0x00, 0x06, 0x3c]))
-        pine.write_bytes(addr+24, bytes([0x00, 0xa6, 0xc6, 0x34]))
+        pine.write_bytes(addr+24, bytes([0x80, 0xae, 0xc6, 0x34]))
         pine.write_bytes(addr+28, bytes([0x0b, 0x00, 0xc0, 0xa0]))
         pine.write_bytes(addr+32, bytes([0x60, 0x6b, 0x0b, 0x0c]))
         pine.write_bytes(addr+36, bytes([0x64, 0x00, 0x05, 0x24]))

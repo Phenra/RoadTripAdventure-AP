@@ -450,7 +450,13 @@ stamps : dict[str, LocationData] = {
         access_rule = lambda state, player:
             has_all_gemstones(state, player)
     ),
-    LocationName.Stamp_10: LocationData(BASE_IDS.STAMPS + 9, RegionName.Base.Fuji_City),
+    LocationName.Stamp_10: LocationData(BASE_IDS.STAMPS + 9, RegionName.Base.Fuji_City,
+        # NOTE: Big Tires should debatably be required for Stamp 10, as reaching Iwasuke without them
+        #       requires either exploiting physics, or traveling along a steep path near Hakosuke's house
+        #       that may not have been intended.
+        # access_rule = lambda state, player:
+        #     has_tires_of_level(10, state, player)
+    ),
     LocationName.Stamp_11: LocationData(BASE_IDS.STAMPS + 10, RegionName.Fuji_City_Castle_Princess_Nanaha),
     LocationName.Stamp_12: LocationData(BASE_IDS.STAMPS + 11, RegionName.Fuji_City_Heizo_House),
     LocationName.Stamp_13: LocationData(BASE_IDS.STAMPS + 12, RegionName.Fuji_City_Treasure_Hunting),
@@ -664,7 +670,7 @@ stamps : dict[str, LocationData] = {
     ),
     LocationName.Stamp_86: LocationData(BASE_IDS.STAMPS + 85, RegionName.Cloud_Hill_NPC_Dust),
     LocationName.Stamp_87: LocationData(BASE_IDS.STAMPS + 86, RegionName.Cloud_Hill_NPC_Yumyum),
-    LocationName.Stamp_88: LocationData(BASE_IDS.STAMPS + 87, RegionName.Cloud_Hill_Single_Lap_Race, # TODO: Add Single-Lap Race to challenge category?
+    LocationName.Stamp_88: LocationData(BASE_IDS.STAMPS + 87, RegionName.Cloud_Hill_Single_Lap_Race,
         access_rule = lambda state, player:
             can_clear_single_lap_race(state, player)
     ),

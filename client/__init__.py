@@ -161,6 +161,39 @@ class RTAContext(CommonContext):
     def set_save_id_bool_to_sent(self) -> None:
         self.pine.write_bytes(Addresses.ready_for_ap_save_id.address, bytes([0]))
 
+    def is_game_waiting_for_my_city_part_shop_inventory(self) -> bool:
+        data = self.pine.read_bytes(Addresses.ready_for_my_city_part_shop_inventory.address, Addresses.ready_for_my_city_part_shop_inventory.length) 
+        return bytes_to_int(data)
+    
+    def resync_my_city_part_shop_inventory(self) -> None:
+        pine = self.pine
+
+        # Remove the default parts from the My City part shop
+        # The My City part shop has several parts that are always sold there, even if you've never received them.
+        #   Since My City's part shop is used exclusively for repurchasing parts you already own in AP, 
+        #   these are not locations in the multiworld.
+        #   Full list: HG Racing Tires, Speed MAX Engine, Wide Transmission, Spoke 7, Horse Horn, Train Horn
+        write = [0] * 0x38 # 0x38 bytes in My City part shop default parts table
+        addr = 0x2DC76C
+        pine.write_bytes(addr, bytes(write))
+
+        prog_counts = dict() # Init dictionary for counting progressive items
+        for item in self.items_received:
+            item_name = self.item_names.lookup_in_game(item.item) # The 'item' attribute in a NetworkItem object is the item's ID (meaning this is an int)
+            
+            # Convert progressive items to actual item names
+            prog_count = prog_counts.get(item_name, 0)
+            item_name_prog = progressive_item_to_actual_item_name(self, item_name, prog_count)
+            if item_name_prog != None:
+                prog_counts[item_name] = prog_count + 1
+                item_name = item_name_prog
+            
+            update_my_city_part_shop(self, item_name)
+        
+        # Reset byte so this function doesn't run again
+        self.pine.write_bytes(Addresses.ready_for_my_city_part_shop_inventory.address, bytes([0]))
+
+
     # On new game, we save an ID generated for this slot to RTA's save file. This function determines
     #   whether the seed in the save file matches the one for this slot on the server.
     def save_matches_slot(self):
@@ -347,7 +380,7 @@ class RTAContext(CommonContext):
             #   and return False.
             return False
     
-    def is_game_patched_full(self) -> bool:       
+    def is_game_patched_full(self) -> bool:
         # Create a mock Pine object, and have its 'write_bytes' function instead locally store the
         #   bytes being written. Afterward, compare those bytes to those in the game's memory.
         mock = PineMock()
@@ -362,6 +395,20 @@ class RTAContext(CommonContext):
 
 
 # --------- Handle receiving items ---------
+def progressive_item_to_actual_item_name(self : RTAContext, item_name : str, prog_level : int) -> str|None:
+    item_name_new = None
+    if "Progressive" in item_name and item_name != ItemName.Progressive_License:
+        prog_part_type = item_name.split(" - ")[0] # remove " - Set 2" or " - Set 3" from string 
+        try:
+            item_name_new = progressive_part_order[prog_part_type][prog_level]
+            print(f"Non-prog actual item: {item_name_new}")
+        except Exception:
+            print("Progressive item index out of range, skipping")
+    else:
+        print("Part is not progressive, skipping")
+
+    return item_name_new
+
 def handle_received_items(self : RTAContext):
     if self.RTA_status == self.RTAStatus.RTA_IN_AP_GAME and self.save_matches_slot():
         # print("Index: ", args['index'])
@@ -391,7 +438,6 @@ def handle_received_items(self : RTAContext):
                 print(msg)
             
                 # Convert the progressive upgrade to its actual item
-                # TODO: Make a 'get progressive item' function
                 if "Progressive" in item_name and item_name != ItemName.Progressive_License:
                     # Total number of this prog item received by the player, according to the server
                     # This, however, includes items RTA hasn't actually handled yet
@@ -401,17 +447,9 @@ def handle_received_items(self : RTAContext):
                     current_prog_to_send = total_prog_count - prog_not_yet_counted
                     print(f"{item_name} is prog count: ", current_prog_to_send)
 
-                    # Convert the progressive item to its corresponding actual item
-                    prog_part_type = item_name.split(" - ")[0] # remove " - Set 2" or " - Set 3" from string 
-                    valid_prog_index = False
-                    try:
-                        item_name_new = progressive_part_order[prog_part_type][current_prog_to_send]
-                        valid_prog_index = True
-                    except Exception:
-                        print("Progressive item index out of range, skipping")
+                    item_name_new = progressive_item_to_actual_item_name(self, item_name, current_prog_to_send)
 
-                    if valid_prog_index:
-                        print(f"Non-prog actual item: {item_name_new}")
+                    if item_name_new != None:
                         update_inventory(self, item_name_new)
 
                 elif item_name == ItemName.Stamp:
@@ -646,7 +684,7 @@ async def check_world_grand_prix_completion(ctx: RTAContext):
     num_bytes = table.length
     data = ctx.pine.read_bytes(address, num_bytes)
 
-    if is_bit_set(data, 31, "little"): # World GP completion is 31st bit (when bytes are read in reverse order, because little-endian)
+    if is_bit_set(data, 23, "little"): # World GP completion is 23rd bit
         await ctx.send_msgs([{"cmd": "LocationChecks", "locations": [table.base_ID]}])
 
 # --------- Game loop ---------
@@ -673,6 +711,8 @@ async def handle_rta(ctx: RTAContext):
         #
         # At this point, we can finally handle received items and check for location clears!
         #
+        if ctx.is_game_waiting_for_my_city_part_shop_inventory():
+            ctx.resync_my_city_part_shop_inventory()
         handle_received_items(ctx)
         await check_race_completions(ctx)
         await check_stamp_completions(ctx)

@@ -180,6 +180,7 @@ challenge_minigames : dict[str] = {
     LocationName.Stamp_75,  # Obstacle Course
     LocationName.Stamp_76,  # Obstacle Course within 2 min
     LocationName.Stamp_78,  # Beach Flag  # Summer Pattern, double-up
+    LocationName.Stamp_88,  # Single-Lap Race  # Sky_Pattern, double-up
     LocationName.Stamp_90   # Rainbow Jump  # Rainbow Meter, double-up
 }
 

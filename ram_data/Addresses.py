@@ -336,3 +336,12 @@ ready_for_ap_save_id = TableData(
     storage_type = StorageType.Bytes,
     base_ID = None
 )
+
+# Bool to indicate to the server that the current My City part shop inventory has not been sent, 
+#     and the server should set it
+ready_for_my_city_part_shop_inventory = TableData(
+    address = 0x2DA0F1,
+    length = 1,
+    storage_type = StorageType.Bytes,
+    base_ID = None
+)
