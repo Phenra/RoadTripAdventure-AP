@@ -154,7 +154,7 @@ class RTAContext(CommonContext):
 
     def is_game_waiting_for_save_id(self) -> bool:
         data = self.pine.read_bytes(Addresses.ready_for_ap_save_id.address, Addresses.ready_for_ap_save_id.length) 
-        return bytes_to_int(data)
+        return bytes_to_int(data) == 1
 
     # The RTA function hook that sets the AP index to its default (0x1) also sets a byte to let the
     #   client know that the save ID can be sent to the game now. This resets that byte to 0x0.

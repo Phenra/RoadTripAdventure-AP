@@ -554,7 +554,8 @@ def patch_npc_dialogue_triggers(pine : Pine):
     """
     # Patch Luke's dialogue for the UnbaboDoll. Normally, the dialogue where he would give you the doll
     #   is skipped if you already have the stamp, *or* if you already have the item.
-    pine.write_bytes(0x315FC2, bytes([0x15, 0x49]))
+    # This changes the item check to use the collectible index after the final one (the Peach), which is never set.
+    pine.write_bytes(0x315FC4, bytes([0x30]))
 
 
 def patch_tin_raceway_requirements(pine : Pine):
