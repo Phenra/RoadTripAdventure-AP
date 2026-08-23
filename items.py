@@ -5,7 +5,7 @@ from worlds.AutoWorld import World
 
 from .names import ItemName
 from .categories import decoration_progression_only, stamp_progression_only
-from .options import get_RTA_options, AreaUnlockMode, LicenseHandling
+from .options import get_RTA_options, get_q_coin_filler_count, AreaUnlockMode, LicenseHandling
 
 class ItemData(typing.NamedTuple):
     id: int
@@ -33,6 +33,7 @@ class BASE_IDS(): # Cannot inherit from IntEnum, causes pickle error in AP for s
     BODIES = 400
     STAMP = 1000
     PROGRESSIVE_LICENSE = 1001
+    Q_COIN = 1010
     PROGRESSIVE_PARTS_SET1 = 1100
     PROGRESSIVE_PARTS_SET2 = 1200
     PROGRESSIVE_PARTS_SET3 = 1300
@@ -63,6 +64,7 @@ class BASE_IDS(): # Cannot inherit from IntEnum, causes pickle error in AP for s
             self.BODIES,
             self.STAMP,
             self.PROGRESSIVE_LICENSE,
+            self.Q_COIN,
             self.PROGRESSIVE_PARTS_SET1,
             self.PROGRESSIVE_PARTS_SET2,
             self.PROGRESSIVE_PARTS_SET3,
@@ -469,6 +471,10 @@ progressive_parts_set_3 = {
     ItemName.Progressive_Brakes_Set_3: ItemData(BASE_IDS.PROGRESSIVE_PARTS_SET3 + 6, 3, ItemClassification.useful),
 }
 
+q_coins = {
+    ItemName.Q_Coin: ItemData(BASE_IDS.Q_COIN, 100, ItemClassification.progression)
+}
+
 filler = {
     ItemName.Filler: ItemData(BASE_IDS.FILLER, 0, ItemClassification.filler)
 }
@@ -509,6 +515,8 @@ item_table : dict[str, ItemData] = {
     **progressive_parts_set_2,
     **progressive_parts_set_3,
 
+    **q_coins,
+
     **victory
 }
 
@@ -540,7 +548,8 @@ all_item_table : dict[str, ItemData] = {
     **progressive_parts,
     **progressive_parts_set_2,
     **progressive_parts_set_3,
-    **victory 
+    **q_coins,
+    **victory
 }
 
 def item_name_to_base_ID(item_name : str) -> int:
@@ -574,6 +583,7 @@ def create_items_RTA(world : World):
     options = get_RTA_options(world.multiworld, world.player)
     
     item_count = 0
+    q_coins_added = 0
     license_items = [] # Store the license items in case needed later for the 'force vanilla location' option
     for item_name in item_table:
         # If our area unlock mode is Decorations, skip any Stamp-mode-only items.
@@ -592,6 +602,10 @@ def create_items_RTA(world : World):
         # If we're not adding *any* additional progressive item tracks, don't add any of the 2nd
         #     set of progression items, either.
         if item_name in progressive_parts_set_2 and options.additional_progressive_part_tracks < 1:
+            continue
+
+        # Only add Q Coins to the item pool if 'Randomize Q Coins' is enabled
+        if item_name in q_coins and options.randomize_q_coins == 0:
             continue
 
         item_data = item_table[item_name]
@@ -621,6 +635,18 @@ def create_items_RTA(world : World):
                     item_count += 1
                 if options.license_handling == LicenseHandling.option_remove:
                     world.multiworld.push_precollected(item)
+            elif item.name == ItemName.Q_Coin:
+                # Ensure any extra Q coins are marked filler (not needed on default settings)
+                if q_coins_added < get_q_coin_filler_count(world.multiworld, world.player):
+                    item.classification = ItemClassification.filler
+                world.multiworld.itempool += [item]
+                item_count += 1
+                q_coins_added += 1
+            elif item.name == ItemName.Coin_Radar and options.randomize_q_coins != 0:
+                # If 'Randomize Q Coins' is enabled, set the Coin Radar's item classification to Progression
+                item.classification = ItemClassification.progression
+                world.multiworld.itempool += [item]
+                item_count += 1
             else:
                 world.multiworld.itempool += [item]
                 item_count += 1
@@ -649,8 +675,9 @@ def create_items_RTA(world : World):
         sticker_names = [name for name in sticker.keys()]
         wheel_names = [name for name in wheels.keys()]
         meter_names = [name for name in meters.keys()]
+        filler_coins = [name for name in q_coins.keys()] * get_q_coin_filler_count(world.multiworld, world.player) # Remove filler coins as a last-ditch attempt to equalize item and location counts
 
-        categories = [wallpaper_names, decoration_names, body_names, sticker_names, wheel_names, meter_names]
+        categories = [wallpaper_names, decoration_names, body_names, sticker_names, wheel_names, meter_names, filler_coins]
 
         for category in categories:
             world.random.shuffle(category)

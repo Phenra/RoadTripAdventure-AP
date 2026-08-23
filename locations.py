@@ -17,6 +17,7 @@ class BASE_IDS():
     WORLD_GP = 5
     RACES = 10
     STAMPS = 200
+    Q_COINS = 400
     ITEMS = 1000
     SHOP_PURCHASES = 2000
     COMBINED = 10000
@@ -545,7 +546,7 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_45: LocationData(BASE_IDS.STAMPS + 44, RegionName.My_City_Tower),
     LocationName.Stamp_46: LocationData(BASE_IDS.STAMPS + 45, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
-            city_access_count_for_QCoins(state, player) >= 7
+            can_clear_coine_reward(state, player, 10)
     ),
     LocationName.Stamp_47: LocationData(BASE_IDS.STAMPS + 46, RegionName.My_City_Which_Way_Maze),
     LocationName.Stamp_48: LocationData(BASE_IDS.STAMPS + 47, RegionName.My_City_Rally_Center, 
@@ -614,16 +615,16 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_67: LocationData(BASE_IDS.STAMPS + 66, RegionName.White_Mountain_Santa_House),
     LocationName.Stamp_68: LocationData(BASE_IDS.STAMPS + 67, RegionName.White_Mountain_Keitel_House,
         access_rule = lambda state, player:
-            can_reach_all_coin_radar_houses(state, player)     
+            can_reach_all_coin_radar_houses(state, player)
     ),
     LocationName.Stamp_69: LocationData(BASE_IDS.STAMPS + 68, RegionName.White_Mountain_Curling),
     LocationName.Stamp_70: LocationData(BASE_IDS.STAMPS + 69, RegionName.White_Mountain_Curling, 
         access_rule = lambda state, player:
-            has_chassis_of_level(1, state, player) 
+            has_chassis_of_level(1, state, player)
     ),
     LocationName.Stamp_71: LocationData(BASE_IDS.STAMPS + 70, RegionName.White_Mountain_Policeman_House,
         access_rule = lambda state, player:
-            state.can_reach_region(RegionName.Lightouse, player)                                        
+            state.can_reach_region(RegionName.Lighthouse, player)
     ),
     LocationName.Stamp_72: LocationData(BASE_IDS.STAMPS + 71, RegionName.Base.Papaya_Island,
         access_rule = lambda state, player:
@@ -732,6 +733,114 @@ stamps : dict[str, LocationData] = {
     ),
 }
 
+q_coins : dict[str, LocationData] = {
+    # NOTE: IDs below match bit for each coin in the Q Coins Obtained bitfield, starting
+    #  at one (when read as a little-endian integer)
+    LocationName.Q_Coin_1: LocationData(BASE_IDS.Q_COINS + 1, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_2: LocationData(BASE_IDS.Q_COINS + 2, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_3: LocationData(BASE_IDS.Q_COINS + 3, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_4: LocationData(BASE_IDS.Q_COINS + 4, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_5: LocationData(BASE_IDS.Q_COINS + 5, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_6: LocationData(BASE_IDS.Q_COINS + 6, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_7: LocationData(BASE_IDS.Q_COINS + 7, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_8: LocationData(BASE_IDS.Q_COINS + 8, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_9: LocationData(BASE_IDS.Q_COINS + 9, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_10: LocationData(BASE_IDS.Q_COINS + 10, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_11: LocationData(BASE_IDS.Q_COINS + 11, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_12: LocationData(BASE_IDS.Q_COINS + 12, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_13: LocationData(BASE_IDS.Q_COINS + 13, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_14: LocationData(BASE_IDS.Q_COINS + 14, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_15: LocationData(BASE_IDS.Q_COINS + 15, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_16: LocationData(BASE_IDS.Q_COINS + 16, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_17: LocationData(BASE_IDS.Q_COINS + 17, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_18: LocationData(BASE_IDS.Q_COINS + 18, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_19: LocationData(BASE_IDS.Q_COINS + 19, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_20: LocationData(BASE_IDS.Q_COINS + 20, RegionName.Base.My_City),
+    LocationName.Q_Coin_21: LocationData(BASE_IDS.Q_COINS + 21, RegionName.Base.My_City),
+    LocationName.Q_Coin_22: LocationData(BASE_IDS.Q_COINS + 22, RegionName.Base.Chestnut_Canyon),
+    LocationName.Q_Coin_23: LocationData(BASE_IDS.Q_COINS + 23, RegionName.Base.Chestnut_Canyon),
+    LocationName.Q_Coin_24: LocationData(BASE_IDS.Q_COINS + 24, RegionName.Base.Chestnut_Canyon),
+    LocationName.Q_Coin_25: LocationData(BASE_IDS.Q_COINS + 25, RegionName.Base.Chestnut_Canyon),
+    LocationName.Q_Coin_26: LocationData(BASE_IDS.Q_COINS + 26, RegionName.Base.Chestnut_Canyon),
+    LocationName.Q_Coin_27: LocationData(BASE_IDS.Q_COINS + 27, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_28: LocationData(BASE_IDS.Q_COINS + 28, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_29: LocationData(BASE_IDS.Q_COINS + 29, RegionName.Base.Sandpolis),
+    LocationName.Q_Coin_30: LocationData(BASE_IDS.Q_COINS + 30, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_31: LocationData(BASE_IDS.Q_COINS + 31, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_32: LocationData(BASE_IDS.Q_COINS + 32, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_33: LocationData(BASE_IDS.Q_COINS + 33, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_34: LocationData(BASE_IDS.Q_COINS + 34, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_35: LocationData(BASE_IDS.Q_COINS + 35, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_36: LocationData(BASE_IDS.Q_COINS + 36, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_37: LocationData(BASE_IDS.Q_COINS + 37, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_38: LocationData(BASE_IDS.Q_COINS + 38, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_39: LocationData(BASE_IDS.Q_COINS + 39, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_40: LocationData(BASE_IDS.Q_COINS + 40, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_41: LocationData(BASE_IDS.Q_COINS + 41, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_42: LocationData(BASE_IDS.Q_COINS + 42, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_43: LocationData(BASE_IDS.Q_COINS + 43, RegionName.Base.Sandpolis,
+        access_rule = lambda state, player:
+            can_access_top_of_pyramids(state, player)
+    ),
+    LocationName.Q_Coin_44: LocationData(BASE_IDS.Q_COINS + 44, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_45: LocationData(BASE_IDS.Q_COINS + 45, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_46: LocationData(BASE_IDS.Q_COINS + 46, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_47: LocationData(BASE_IDS.Q_COINS + 47, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_48: LocationData(BASE_IDS.Q_COINS + 48, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_49: LocationData(BASE_IDS.Q_COINS + 49, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_50: LocationData(BASE_IDS.Q_COINS + 50, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_51: LocationData(BASE_IDS.Q_COINS + 51, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_52: LocationData(BASE_IDS.Q_COINS + 52, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_53: LocationData(BASE_IDS.Q_COINS + 53, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_54: LocationData(BASE_IDS.Q_COINS + 54, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_55: LocationData(BASE_IDS.Q_COINS + 55, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_56: LocationData(BASE_IDS.Q_COINS + 56, RegionName.Base.Mushroom_Road),
+    LocationName.Q_Coin_57: LocationData(BASE_IDS.Q_COINS + 57, RegionName.Base.Mushroom_Road),
+    LocationName.Q_Coin_58: LocationData(BASE_IDS.Q_COINS + 58, RegionName.Base.Mushroom_Road),
+    LocationName.Q_Coin_59: LocationData(BASE_IDS.Q_COINS + 59, RegionName.Base.Mushroom_Road),
+    LocationName.Q_Coin_60: LocationData(BASE_IDS.Q_COINS + 60, RegionName.Base.Mushroom_Road),
+    LocationName.Q_Coin_61: LocationData(BASE_IDS.Q_COINS + 61, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_62: LocationData(BASE_IDS.Q_COINS + 62, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_63: LocationData(BASE_IDS.Q_COINS + 63, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_64: LocationData(BASE_IDS.Q_COINS + 64, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_65: LocationData(BASE_IDS.Q_COINS + 65, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_66: LocationData(BASE_IDS.Q_COINS + 66, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_67: LocationData(BASE_IDS.Q_COINS + 67, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_68: LocationData(BASE_IDS.Q_COINS + 68, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_69: LocationData(BASE_IDS.Q_COINS + 69, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_70: LocationData(BASE_IDS.Q_COINS + 70, RegionName.Base.Fuji_City),
+    LocationName.Q_Coin_71: LocationData(BASE_IDS.Q_COINS + 71, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_72: LocationData(BASE_IDS.Q_COINS + 72, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_73: LocationData(BASE_IDS.Q_COINS + 73, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_74: LocationData(BASE_IDS.Q_COINS + 74, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_75: LocationData(BASE_IDS.Q_COINS + 75, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_76: LocationData(BASE_IDS.Q_COINS + 76, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_77: LocationData(BASE_IDS.Q_COINS + 77, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_78: LocationData(BASE_IDS.Q_COINS + 78, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_79: LocationData(BASE_IDS.Q_COINS + 79, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_80: LocationData(BASE_IDS.Q_COINS + 80, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_81: LocationData(BASE_IDS.Q_COINS + 81, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_82: LocationData(BASE_IDS.Q_COINS + 82, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_83: LocationData(BASE_IDS.Q_COINS + 83, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_84: LocationData(BASE_IDS.Q_COINS + 84, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_85: LocationData(BASE_IDS.Q_COINS + 85, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_86: LocationData(BASE_IDS.Q_COINS + 86, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_87: LocationData(BASE_IDS.Q_COINS + 87, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_88: LocationData(BASE_IDS.Q_COINS + 88, RegionName.Base.White_Mountain),
+    LocationName.Q_Coin_89: LocationData(BASE_IDS.Q_COINS + 89, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_90: LocationData(BASE_IDS.Q_COINS + 90, RegionName.Base.Peach_Town),
+    LocationName.Q_Coin_91: LocationData(BASE_IDS.Q_COINS + 91, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_92: LocationData(BASE_IDS.Q_COINS + 92, RegionName.Base.Papaya_Island_Island),
+    LocationName.Q_Coin_93: LocationData(BASE_IDS.Q_COINS + 93, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_94: LocationData(BASE_IDS.Q_COINS + 94, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_95: LocationData(BASE_IDS.Q_COINS + 95, RegionName.Base.Papaya_Island_Upper),
+    LocationName.Q_Coin_96: LocationData(BASE_IDS.Q_COINS + 96, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_97: LocationData(BASE_IDS.Q_COINS + 97, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_98: LocationData(BASE_IDS.Q_COINS + 98, RegionName.Base.Papaya_Island_Upper),
+    LocationName.Q_Coin_99: LocationData(BASE_IDS.Q_COINS + 99, RegionName.Base.Papaya_Island),
+    LocationName.Q_Coin_100: LocationData(BASE_IDS.Q_COINS + 100, RegionName.Base.Papaya_Island_Upper),
+}
+
 items_received : dict[str, LocationData] = {
     # NOTE: IDs below match the vanilla reward item's offset
     #   e.g. Body Q001 is the 1st item, Billboard Coffee Shop is the 223rd item, etc.
@@ -746,51 +855,55 @@ items_received : dict[str, LocationData] = {
     LocationName.Billboard_Cake_Shop: LocationData(BASE_IDS.ITEMS + 224, RegionName.Sandpolis_Cake_Shop),
     LocationName.Billboard_Wool_Shop: LocationData(BASE_IDS.ITEMS + 225, RegionName.White_Mountain_Wool_Shop),
     LocationName.Billboard_Coconut_Shop: LocationData(BASE_IDS.ITEMS + 226, RegionName.Papaya_Island_Coconut_Shop),
-    LocationName.Coine_Reward_1: LocationData(BASE_IDS.ITEMS + 85, RegionName.My_City_Coine_House),
+    LocationName.Coine_Reward_1: LocationData(BASE_IDS.ITEMS + 85, RegionName.My_City_Coine_House,
+        access_rule = lambda state, player:
+            #state.can_reach_region(RegionName.Base.My_City, player) and
+            can_clear_coine_reward(state, player, 1)
+    ),
     LocationName.Coine_Reward_2: LocationData(BASE_IDS.ITEMS + 79, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 2
+            can_clear_coine_reward(state, player, 2)
     ),
     LocationName.Coine_Reward_3: LocationData(BASE_IDS.ITEMS + 80, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 3
+            can_clear_coine_reward(state, player, 3)
         ),
     LocationName.Coine_Reward_4: LocationData(BASE_IDS.ITEMS + 83, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 4
+            can_clear_coine_reward(state, player, 4)
         ),
     LocationName.Coine_Reward_5: LocationData(BASE_IDS.ITEMS + 162, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 5
+            can_clear_coine_reward(state, player, 5)
         ),
     LocationName.Coine_Reward_6: LocationData(BASE_IDS.ITEMS + 190, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 6
+            can_clear_coine_reward(state, player, 6)
         ),
     LocationName.Coine_Reward_7: LocationData(BASE_IDS.ITEMS + 186, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 7
+            can_clear_coine_reward(state, player, 7)
         ),
     LocationName.Coine_Reward_8: LocationData(BASE_IDS.ITEMS + 180, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 7
+            can_clear_coine_reward(state, player, 8)
         ),
     LocationName.Coine_Reward_9: LocationData(BASE_IDS.ITEMS + 194, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 7
+            can_clear_coine_reward(state, player, 9)
         ),
     LocationName.Coine_Reward_10: LocationData(BASE_IDS.ITEMS + 174, RegionName.My_City_Coine_House,
         access_rule = lambda state, player:
             #state.can_reach_region(RegionName.Base.My_City, player) and
-            city_access_count_for_QCoins(state, player) >= 7
+            can_clear_coine_reward(state, player, 10)
         ),
     LocationName.Trade_Quest_1: LocationData(BASE_IDS.ITEMS + 280, RegionName.Peach_Town_Fight_House), # Gives Hero Super Card in vanilla
     LocationName.Trade_Quest_2: LocationData(BASE_IDS.ITEMS + 281, RegionName.Sandpolis_Barton_House, # Gives Pretty Doll in vanilla
@@ -838,7 +951,7 @@ items_received : dict[str, LocationData] = {
     ),
     LocationName.Body_Q082: LocationData(BASE_IDS.ITEMS + 81, RegionName.White_Mountain_Policeman_House,
         access_rule = lambda state, player:
-            state.can_reach_region(RegionName.Lightouse, player)    
+            state.can_reach_region(RegionName.Lighthouse, player)
     ),
     LocationName.Body_Q085: LocationData(BASE_IDS.ITEMS + 84, RegionName.My_City_Tunnel_Race),
     LocationName.Body_Q087: LocationData(BASE_IDS.ITEMS + 86, RegionName.Peach_Town_Gemstone_House, # Reward for Stamp 9 (Gemstones)
@@ -967,7 +1080,7 @@ overworld_items : dict[str, LocationData] = {
     
     LocationName.Blue_Sapphire: LocationData(BASE_IDS.ITEMS + 287, RegionName.Base.Sandpolis,
         access_rule = lambda state, player:
-            has_tires_of_level(10, state, player) # Big Tires, to drive up the pyramid
+            can_access_top_of_pyramids(state, player)
     ),
     LocationName.Emerald: LocationData(BASE_IDS.ITEMS + 288, RegionName.Base.White_Mountain),
     LocationName.Ruby: LocationData(BASE_IDS.ITEMS + 289, RegionName.Base.Sandpolis),
@@ -988,7 +1101,7 @@ overworld_items : dict[str, LocationData] = {
     
     LocationName.Fountain_Pen: LocationData(BASE_IDS.ITEMS + 295, RegionName.Base.Sandpolis,
         access_rule = lambda state, player:
-            has_tires_of_level(10, state, player) # Big Tires, to drive up the pyramid
+            can_access_top_of_pyramids(state, player)
     ),
 
     LocationName.Papu_Flower: LocationData(BASE_IDS.ITEMS + 297, RegionName.Base.Papaya_Island_Upper),
@@ -1392,6 +1505,7 @@ location_table = {
     **races_a_rank,
     **races_other,
     **stamps,
+    **q_coins,
     **items_received,
     **overworld_items,
     **shop_purchases,
@@ -1459,6 +1573,9 @@ def create_locations_RTA(world : World):
         # Do not add license locations if they have been set to removed via the YAML.
         if options.license_handling == LicenseHandling.option_remove and \
             (location_name in licenses):
+            continue
+        # Only add Q Coin locations if 'Randomize Q Coins' is enabled
+        if options.randomize_q_coins == False and location_name in q_coins.keys():
             continue
 
         location_data = location_table[location_name]

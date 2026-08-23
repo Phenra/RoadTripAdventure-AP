@@ -62,21 +62,72 @@ def has_brakes_of_level(required_level: int, state: CollectionState, player: int
 def has_license_count(count: int, state: CollectionState, player: int) -> bool:
     return state.count(ItemName.Progressive_License, player) >= count
 
-def city_access_count(state: CollectionState, player: int) -> int:
-    return [
-        state.can_reach_region(RegionName.Base.Peach_Town, player),
-        state.can_reach_region(RegionName.Base.Fuji_City, player),
-        state.can_reach_region(RegionName.Base.Sandpolis, player),
-        state.can_reach_region(RegionName.Base.Chestnut_Canyon, player),
-        state.can_reach_region(RegionName.Base.Mushroom_Road, player),
-        state.can_reach_region(RegionName.Base.White_Mountain, player),
-        state.can_reach_region(RegionName.Base.Papaya_Island, player),
-        state.can_reach_region(RegionName.Base.Cloud_Hill, player)
-    ].count(True)
+def closure__get_q_coins_per_region():
+    q_coins_per_region = dict() # Using closure to cache / memoize value. Only needs to be calculated once.
 
-def city_access_count_for_QCoins(state: CollectionState, player: int) -> int:
-    # Cloud Hill does not have Q coins
-    return city_access_count(state, player) - int(state.can_reach_region(RegionName.Base.Cloud_Hill, player))
+    def get_q_coins_per_region():
+        from .locations import q_coins
+        nonlocal q_coins_per_region
+
+        if not q_coins_per_region:
+            for location_data in q_coins.values():
+                if q_coins_per_region.get(location_data.region):
+                    q_coins_per_region[location_data.region] += 1
+                else:
+                    q_coins_per_region[location_data.region] = 1
+
+        return q_coins_per_region
+
+    return get_q_coins_per_region
+
+get_q_coins_per_region = closure__get_q_coins_per_region()
+
+def get_accessible_base_regions(state : CollectionState, player : int) -> list[str]:
+    regions = [
+        RegionName.Base.Peach_Town,
+        RegionName.Base.Fuji_City,
+        RegionName.Base.My_City,
+        RegionName.Base.Sandpolis,
+        RegionName.Base.Chestnut_Canyon,
+        RegionName.Base.Mushroom_Road,
+        RegionName.Base.White_Mountain,
+        RegionName.Base.Papaya_Island,
+        RegionName.Base.Papaya_Island_Upper,
+        RegionName.Base.Papaya_Island_Island,
+        RegionName.Base.Cloud_Hill
+    ]
+    regions_to_remove = []
+
+    for region in regions:
+        if not state.can_reach_region(region, player):
+            regions_to_remove.append(region)
+
+    for region in regions_to_remove:
+        regions.remove(region)
+
+    return regions
+
+def q_coins_accessible(state: CollectionState, player: int) -> int:
+    accessible_regions = get_accessible_base_regions(state, player)
+    q_coins_per_region = get_q_coins_per_region()
+
+    coin_count = 0
+    for region in accessible_regions:
+        coin_count += q_coins_per_region.get(region, 0)
+
+    # Test for coins that have access rules
+    if RegionName.Base.Sandpolis in accessible_regions and state.can_reach_location(LocationName.Q_Coin_43, player) == False: # Atop Pyramid
+        coin_count -= 1
+
+    return coin_count
+
+def can_clear_coine_reward(state: CollectionState, player: int, reward_level : int) -> bool:
+    coins_needed = state.multiworld.worlds[player].options.q_coins_needed_per_coine_reward * reward_level
+
+    if state.multiworld.worlds[player].options.randomize_q_coins == True:
+        return state.has(ItemName.Q_Coin, player, coins_needed)
+
+    return q_coins_accessible(state, player) >= coins_needed
 
 def has_all_gemstones(state: CollectionState, player: int) -> bool:
     return (
@@ -243,3 +294,6 @@ def can_access_all_quick_pic_shops(state: CollectionState, player: int) -> bool:
             return False
     
     return True
+
+def can_access_top_of_pyramids(state: CollectionState, player: int) -> bool:
+    return has_tires_of_level(10, state, player) # Big Tires, to drive up the pyramid

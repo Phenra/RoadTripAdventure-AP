@@ -230,7 +230,7 @@ regions = {
             RegionName.Quick_Pic_50,
             RegionName.Quick_Pic_51,
 
-            RegionName.Lightouse,
+            RegionName.Lighthouse,
             RegionName.Quick_Pic_55,
             RegionName.Quick_Pic_56,
             RegionName.Quick_Pic_57,

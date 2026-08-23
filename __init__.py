@@ -191,7 +191,9 @@ class RoadTripWorld(World):
             "remove_double_up_stamps": bool(self.options.remove_double_up_stamps),
             "parts_cost_modifier": int(self.options.parts_cost_modifier),
             "parts_cost_maximum": int(self.options.parts_cost_maximum),
-            "auto_unlock_warps": bool(self.options.auto_unlock_warps)
+            "auto_unlock_warps": bool(self.options.auto_unlock_warps),
+            "randomize_q_coins": bool(self.options.randomize_q_coins),
+            "q_coins_needed_per_coine_reward": int(self.options.q_coins_needed_per_coine_reward),
         }
         return slot_data
 

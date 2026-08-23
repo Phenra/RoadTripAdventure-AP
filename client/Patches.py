@@ -49,6 +49,7 @@ HOOK_ADDR_HANDLE_MY_CITY_PARTS_SHOP_ON_CONTINUE = 0x2DAE00
 
 HOOK_ADDR_COST_PERCENTAGE_MODIFIER = 0x2DAF00
 HOOK_ADDR_PREVENT_AP_ITEM_REPURCHASE = 0x2DB000
+HOOK_ADDR_COINE_PATCH_FOR_Q_COIN_RANDO = 0x2DB080
 
 # ---------------------------------------------------
 def closure__patch_rta_no_slot_data():
@@ -115,7 +116,7 @@ def closure__patch_rta_no_slot_data():
 
 patch_rta_no_slot_data = closure__patch_rta_no_slot_data()
 
-def patch_rta_post_connect(pine : Pine, shop_strings : list, area_unlock_mode : int, parts_cost_modifier : int, parts_cost_maximum : int, auto_unlock_warps : bool):
+def patch_rta_post_connect(pine : Pine, shop_strings : list, area_unlock_mode : int, parts_cost_modifier : int, parts_cost_maximum : int, auto_unlock_warps : bool, randomize_q_coins : bool, q_coins_needed_per_coine_reward : int):
     # AP save setup
     hook_currency_input_to_init_ap(pine, auto_unlock_warps)
 
@@ -130,6 +131,9 @@ def patch_rta_post_connect(pine : Pine, shop_strings : list, area_unlock_mode : 
 
     # In Decorations mode, modify the descriptions of items used as keys to note which town they unlock.
     modify_key_descriptions(pine, area_unlock_mode)
+
+    # Modify how Coine rewards work depending on two provided settings
+    patch_coine_behavior(pine, randomize_q_coins, q_coins_needed_per_coine_reward)
 
 # ---------------------------------------------------
 
@@ -805,6 +809,8 @@ def hook_shops_to_display_ap_item_strings(pine : Pine, shop_strings : list):
         match(description["item_classification"]):
             case ItemClassification.progression:
                 temp = Addresses.ADDR_PART_SHOP_AP_ITEM_CLASSIFICATIONS
+            case ItemClassification.progression_skip_balancing:
+                temp = Addresses.ADDR_PART_SHOP_AP_ITEM_CLASSIFICATIONS
             case ItemClassification.useful:
                 temp = Addresses.ADDR_PART_SHOP_AP_ITEM_CLASSIFICATIONS + 0x10
             case ItemClassification.filler:
@@ -1037,6 +1043,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
     SANDPOLIS = "Sandpolis"
     MY_CITY = "My City"
     CHESTNUT_CANYON = "Chestnut Canyon"
+    CHESTNUT_CANYON_TUNNEL = "Chestnut Canyon Tunnel" # Need to handle the tunnel separately because the Q Coin off the highway should be logically part of Sandpolis instead
     FUJI_CITY = "Fuji City"
     MUSHROOM_ROAD = "Mushroom Road"
     PEACH_TOWN = "Peach Town"
@@ -1054,8 +1061,8 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
 
         # 0x10 through 0x1F
         NO_REGION,NO_REGION,NO_REGION,CHESTNUT_CANYON,
-        CHESTNUT_CANYON,NO_REGION,SANDPOLIS,FUJI_CITY,
-        FUJI_CITY,NO_REGION,MY_CITY,NO_REGION,
+        CHESTNUT_CANYON_TUNNEL,NO_REGION,SANDPOLIS,FUJI_CITY,
+        FUJI_CITY,NO_REGION,FUJI_CITY,NO_REGION,
         NO_REGION,NO_REGION,NO_REGION,NO_REGION,
 
         # 0x20 through 0x2F
@@ -1079,6 +1086,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
     ACCESS_DENIED = "Access Denied"
     ACCESS_GRANTED = "Access Granted"
     HANDLE_WHITE_MOUNTAIN = "Handle White Mountain"
+    HANDLE_CHESTNUT_CANYON_TUNNEL = "Handle Chestnut Canyon Tunnel"
     TEST_REQUIREMENTS = "Test Requirements"
     
     data = []
@@ -1093,7 +1101,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             elif chunk == PEACH_TOWN:
                 data += [0xA, 0xB]
             elif chunk == WINDMILLS:
-                data += [0xFF, 0xFF]
+                data += [0xFF, 0xFF] # Special case
             elif chunk == FUJI_CITY:
                 data += [0xC, 0xD]
             elif chunk == MY_CITY:
@@ -1102,12 +1110,14 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
                 data += [0xe, 0xf]
             elif chunk == CHESTNUT_CANYON:
                 data += [0x10, 0x11]
+            elif chunk == CHESTNUT_CANYON_TUNNEL:
+                data += [0xFD, 0xFD] # Special case
             elif chunk == MUSHROOM_ROAD:
                 data += [0x1, 0x2]
             elif chunk == WHITE_MOUNTAIN:
                 data += [0x9, 0x12]
             elif chunk == WHITE_MOUNTAIN_MAIN:
-                data += [0xFE, 0xFE]
+                data += [0xFE, 0xFE] # Special case
             elif chunk == PAPAYA_ISLAND:
                 data += [0x13, 0x14]
             elif chunk == CLOUD_HILL:
@@ -1187,7 +1197,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             #   enough south from the town that we could have jumped off the waterfall.
             label(HANDLE_WHITE_MOUNTAIN),
             ori(t3, zero, 0xFE),
-            bne(t1, t3, TEST_REQUIREMENTS),
+            bne(t1, t3, HANDLE_CHESTNUT_CANYON_TUNNEL),
             nop(),
 
             # If we're here, we're in White Mountain proper
@@ -1212,6 +1222,41 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             addiu(t0, zero, 0x24),
             beq(zero, zero, GET_REQUIREMENTS),
             nop(),
+
+            # ---- HANDLE CHESTNUT CANYON TUNNEL CHUNK ----
+            # If the first byte is 0xFD, that means we're in the chunk containing the Chestnut Canyon tunnel.
+            #   There is a Q Coin off of the highway on the cliff beside the ocean in this chunk.
+            #   Since it is outside of the tunnel on the Sandpolis side, it should probably be logically
+            #   considered part of Sandpolis.
+            label(HANDLE_CHESTNUT_CANYON_TUNNEL),
+            ori(t3, zero, 0xFD),
+            bne(t1, t3, TEST_REQUIREMENTS),
+            nop(),
+
+            # If we're here, we're at the Chestnut Canyon tunnel.
+            #   Take the two most significant bytes of the player's X position and compare it to 0x44AC.
+            #   If it's less than that, we're too far west, and we're in the tunnel.
+            #   Otherwise, we're outside of it (or close enough).
+            lui(t3, get_upper_nibble(Addresses.ADDR_POSITION_IN_CHUNK)),
+            ori(t3, t3, get_lower_nibble(Addresses.ADDR_POSITION_IN_CHUNK)),
+            lhu(t3, 2, t3),
+            slti(t3, t3, 0x44AC),
+            beq(t3, zero, 5),
+            nop(),
+
+            # If we're here, we're in the Chestnut Canyon part of the chunk.
+            # Set t0 to Chestnut Canyon's chunk ID (0x13) and branch back up.
+            addiu(t0, zero, 0x13),
+            beq(zero, zero, GET_REQUIREMENTS),
+            nop(),
+
+            # If we're here, we're in the Sandpolis part of the chunk.
+            # Set t0 to Sandpolis's chunk ID (0x7) and branch back up.
+            addiu(t0, zero, 0x7),
+            beq(zero, zero, GET_REQUIREMENTS),
+            nop(),
+
+            # ----------------------------------
 
             # Store the address for where we'll store the final boolean return value
             #   (1 if the player can access, 0 if they can't)
@@ -1272,7 +1317,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             elif chunk == PEACH_TOWN:
                 data += [0, 0]
             elif chunk == WINDMILLS:
-                data += [0xFF, 0]
+                data += [0xFF, 0] # Special case
             elif chunk == FUJI_CITY:
                 data += [5, 0]
             elif chunk == MY_CITY:
@@ -1281,12 +1326,14 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
                 data += [10, 0]
             elif chunk == CHESTNUT_CANYON:
                 data += [15, 0]
+            elif chunk == CHESTNUT_CANYON_TUNNEL:
+                data += [0xFD, 0] # Special case
             elif chunk == MUSHROOM_ROAD:
                 data += [20, 0]
             elif chunk == WHITE_MOUNTAIN:
                 data += [25, 0]
             elif chunk == WHITE_MOUNTAIN_MAIN:
-                data += [0xFE, 0x0]
+                data += [0xFE, 0x0] # Special case
             elif chunk == PAPAYA_ISLAND:
                 data += [30, 0]
             elif chunk == CLOUD_HILL:
@@ -1342,7 +1389,7 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             # ---- HANDLE WHITE MOUNTAIN TOWN CHUNK ----
             label(HANDLE_WHITE_MOUNTAIN),
             ori(t3, zero, 0xFE),
-            bne(t1, t3, TEST_REQUIREMENTS),
+            bne(t1, t3, HANDLE_CHESTNUT_CANYON_TUNNEL),
             nop(),
 
             lui(t3, get_upper_nibble(Addresses.ADDR_POSITION_IN_CHUNK)),
@@ -1360,7 +1407,28 @@ def enforce_area_access(pine : Pine, area_unlock_mode : int):
             beq(zero, zero, GET_REQUIREMENTS),
             nop(),
 
+            # ---- HANDLE CHESTNUT CANYON TUNNEL CHUNK ----
+            label(HANDLE_CHESTNUT_CANYON_TUNNEL),
+            ori(t3, zero, 0xFD),
+            bne(t1, t3, TEST_REQUIREMENTS),
+            nop(),
 
+            lui(t3, get_upper_nibble(Addresses.ADDR_POSITION_IN_CHUNK)),
+            ori(t3, t3, get_lower_nibble(Addresses.ADDR_POSITION_IN_CHUNK)),
+            lhu(t3, 2, t3),
+            slti(t3, t3, 0x44AC),
+            beq(t3, zero, 5),
+            nop(),
+
+            addiu(t0, zero, 0x13),
+            beq(zero, zero, GET_REQUIREMENTS),
+            nop(),
+
+            addiu(t0, zero, 0x7),
+            beq(zero, zero, GET_REQUIREMENTS),
+            nop(),
+
+            # ------------------------------------
             label(TEST_REQUIREMENTS),
             lui(t3, get_upper_nibble(Addresses.ap_stamps_received.address)),
             ori(t3, t3, get_lower_nibble(Addresses.ap_stamps_received.address)),
@@ -1793,7 +1861,7 @@ def modify_key_descriptions(pine : Pine, area_unlock_mode : int):
 
 
 def fix_vanilla_bugs(pine : Pine):
-    """Patch various bugs present in the vanilla game"""
+    """Patch various bugs present in the vanilla game."""
     # In vanilla RTA, if the player clears Tunnel Race on their first attempt, they will only
     #   be rewarded Body Q085, and not the Space Meter.
     # In the vanilla game, the Space Meter could still be purchased in the My City parts shop
@@ -1806,3 +1874,89 @@ def fix_vanilla_bugs(pine : Pine):
     pine.write_bytes(0x2A7AD8, bytes([0x20, 0x3a, 0x32]))
 
     # TODO: Patch curling bug
+
+def patch_coine_behavior(pine : Pine, randomize_q_coins : bool, q_coins_needed_per_coine_reward : int):
+    """
+    Modify the number of coins required for each Coine reward. Also, if 'Randomize Q Coins' is
+    enabled, patch Coine rewards to check the number of AP Q Coin items received instead of
+    the number of Q Coins picked up in-game.
+    """
+    def convert_int_to_ascii_chars(num : int) -> tuple[int]:
+        num_str = str(num)
+        int_char_1 = ord(num_str[0])
+        if len(num_str) > 1:
+            int_char_2 = ord(num_str[1])
+        else:
+            int_char_2 = 0x20
+
+        return int_char_1, int_char_2
+
+    if q_coins_needed_per_coine_reward < 10:
+        # The Q Coin checks use hardcoded values placed within Coine's dialogue strings to determine
+        #   how many coins are needed to receive the next reward.
+        coin_requirement_addresses = [
+            0x322C29, # 1st check (10 coins)
+            0x322b61, # 2nd check (20 coins)
+            0x322ad1,
+            0x322a41,
+            0x3229b1,
+            0x322921,
+            0x322891,
+            0x322801,
+            0x322771,
+            0x3226e1
+        ]
+        # Addresses for places where Coine mentions a needed coin amount (each is two bytes).
+        #   2nd value in the list is for the "You have less than x" strings.
+        coin_requirement_text_addresses = [
+            [0x322BC8], # 10 coins
+            [0x322B38, 0x322B76], # 20 coins
+            [0x322AA8, 0x322AE6],
+            [0x322A18, 0x322A56],
+            [0x322988, 0x3229C6],
+            [0x3228F8, 0x322936],
+            [0x322868, 0x3228A6],
+            [0x3227D8, 0x322816],
+            [0x322748, 0x322786],
+            [0x3226B9, 0x3226F6],
+        ]
+        # Address for where Coine mentions how many coins you need per reward (two bytes)
+        coin_requirement_interval_text_address = 0x322D9E
+
+        # Set new requirements
+        new_amount = q_coins_needed_per_coine_reward
+        for addr in coin_requirement_addresses:
+            pine.write_int8(addr, new_amount)
+            new_amount += q_coins_needed_per_coine_reward
+
+        # Update Coine's text
+        new_amount = q_coins_needed_per_coine_reward
+
+        int_as_ascii = convert_int_to_ascii_chars(new_amount)
+        pine.write_bytes(coin_requirement_interval_text_address, bytes([int_as_ascii[0], int_as_ascii[1], 0x20]))
+
+        for addr_list in coin_requirement_text_addresses:
+            int_as_ascii = convert_int_to_ascii_chars(new_amount)
+            for addr in addr_list:
+                pine.write_bytes(addr, bytes([int_as_ascii[0], int_as_ascii[1], 0x20]))
+            new_amount += q_coins_needed_per_coine_reward
+
+    if randomize_q_coins == True:
+        pine.write_bytes(0x23AF38, mips([
+            jal(HOOK_ADDR_COINE_PATCH_FOR_Q_COIN_RANDO)
+        ]))
+
+        pine.write_bytes(HOOK_ADDR_COINE_PATCH_FOR_Q_COIN_RANDO, mips([
+            lui(t0, get_upper_nibble(Addresses.ap_q_coins_received.address)),
+            ori(t0, t0, get_lower_nibble(Addresses.ap_q_coins_received.address)),
+            lbu(t0, 0, t0),
+            addiu(t1, zero, 0x64),
+            subu(v0, t1, t0),
+            jr(ra),
+            nop()
+        ]))
+
+        # Patch Coin count display in the pause menu
+        pine.write_bytes(0x2165BC, mips([
+            jal(HOOK_ADDR_COINE_PATCH_FOR_Q_COIN_RANDO)
+        ]))

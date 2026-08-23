@@ -25,6 +25,7 @@ BYTES_IN_A_WORD = 4
 NUM_COURSES = 26
 NUM_BODIES = 151
 NUM_STAMPS = 100
+NUM_Q_COINS = 100
 NUM_COLLECTIBLES = 48
 NUM_LICENSES = 3
 
@@ -129,6 +130,13 @@ stamp_completions = TableData(
     base_ID = BASE_LOCATION_IDS.STAMPS,
 )
 
+q_coins_collected = TableData(
+    address = 0x177FCA8,
+    length = ceil(NUM_Q_COINS / BITS_IN_BYTE), # Should be 13. Technically only 12.5 bytes are used, since final 4 bits are not used (i.e. there are no Q Coins 101-104)
+    storage_type = StorageType.Bits,
+    base_ID = BASE_LOCATION_IDS.Q_COINS,
+)
+
 shop_purchases = TableData(
     address = 0x17829D0, # Seemingly unused portion of save data toward the end
     length = 32, # 256 bits. There are far fewer than 256 items that can be purchased, but we're keeping the game's part indicies as-is for simplicity, and storing based on that, so we need a lot more space.
@@ -153,6 +161,14 @@ license_completions = TableData(
 # Used for stamp area access mode. Only modified by the server. 
 ap_stamps_received = TableData(
     address = 0x1782A31, # Seemingly unused portion of save data toward the end
+    length = 1,
+    storage_type = StorageType.Bytes,
+    base_ID = None,
+)
+
+# Only modified by the server when 'Randomize Q Coins' is enabled.
+ap_q_coins_received = TableData(
+    address = 0x1782A32, # Seemingly unused portion of save data toward the end
     length = 1,
     storage_type = StorageType.Bytes,
     base_ID = None,

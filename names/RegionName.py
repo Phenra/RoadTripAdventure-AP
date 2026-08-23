@@ -385,7 +385,7 @@ Quick_Pic_51 = "Quick-Pic Shop No. 51"
 NPC_Benji = "Sandpolis Roaming NPC - Benji"
 
 # Lighthouse (0xE)
-Lightouse = "Sandpolis - Lighthouse"
+Lighthouse = "Sandpolis - Lighthouse"
 
 Quick_Pic_55 = "Quick-Pic Shop No. 55"
 Quick_Pic_56 = "Quick-Pic Shop No. 56"

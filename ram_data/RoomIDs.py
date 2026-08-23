@@ -269,7 +269,7 @@ room_IDs = {
     RegionName.Quick_Pic_50: RoomIDs(Chunk.PYRAMIDS, 3),
     RegionName.Quick_Pic_51: RoomIDs(Chunk.PYRAMIDS, 4),
 
-    RegionName.Lightouse: RoomIDs(Chunk.LIGHTHOUSE, 0),
+    RegionName.Lighthouse: RoomIDs(Chunk.LIGHTHOUSE, 0),
     RegionName.Quick_Pic_55: RoomIDs(Chunk.LIGHTHOUSE, 1),
     RegionName.Quick_Pic_56: RoomIDs(Chunk.LIGHTHOUSE, 2),
     RegionName.Quick_Pic_57: RoomIDs(Chunk.LIGHTHOUSE, 3),

@@ -119,6 +119,8 @@ class RTAContext(CommonContext):
     auto_unlock_warps = False
     reset_post_connect_patches = False
     quick_patch_check_failed = False
+    randomize_q_coins = False
+    q_coins_needed_per_coine_reward = 10
 
     # Overriding the default run_gui function in order to set the title of the client window.
     # Taken from the Adventure Client. RaC2's client seems to use basically the same function as well.
@@ -163,6 +165,8 @@ class RTAContext(CommonContext):
             self.parts_cost_modifier = args['slot_data'].get('parts_cost_modifier', self.parts_cost_modifier)
             self.parts_cost_maximum = args['slot_data'].get('parts_cost_maximum', self.parts_cost_maximum)
             self.auto_unlock_warps = args['slot_data'].get('auto_unlock_warps', self.auto_unlock_warps)
+            self.randomize_q_coins = args['slot_data'].get('randomize_q_coins', self.randomize_q_coins)
+            self.q_coins_needed_per_coine_reward = args['slot_data'].get('q_coins_needed_per_coine_reward', self.q_coins_needed_per_coine_reward)
 
             self.reset_post_connect_patches = True
 
@@ -498,6 +502,8 @@ def handle_received_items(self : RTAContext):
 
                 elif item_name == ItemName.Stamp:
                     increment_stamp_count(self)
+                elif item_name == ItemName.Q_Coin:
+                    increment_q_coin_count(self)
                 else:
                     update_inventory(self, item_name)
 
@@ -660,6 +666,22 @@ def increment_stamp_count(self : RTAContext):
     
     pine.write_int8(address, stamp_count)
 
+def increment_q_coin_count(self : RTAContext):
+    pine = self.pine
+
+    table = Addresses.ap_q_coins_received
+
+    # Read from PCSX2 memory.
+    address = table.address
+    num_bytes = table.length
+    q_coin_count = pine.read_int8(address)
+
+    # Increment and write to PCSX2 memory.
+    if q_coin_count < 255: # Prevent overflow
+        q_coin_count = q_coin_count + 1
+
+    pine.write_int8(address, q_coin_count)
+
 # --------- Handle location checks ---------
 async def check_race_completions(ctx: RTAContext):
     table = Addresses.race_results
@@ -704,6 +726,25 @@ async def check_stamp_completions(ctx: RTAContext):
 
     if victory:
         await ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}])
+
+async def check_q_coin_completions(ctx : RTAContext):
+    table = Addresses.q_coins_collected
+
+    # Read from PCSX2 memory
+    address = table.address
+    num_bytes = table.length
+    data = ctx.pine.read_bytes(address, num_bytes)
+
+    # Determine which location checks have been completed
+    q_coin_completions = []
+    for index in range(Addresses.NUM_Q_COINS):
+        if not is_bit_set(data, index, "little"): # Q Coins collected are represented as a cleared bit (all start as 1 instead of 0)
+            #print(ctx.location_names.lookup_in_game(index + table.baseID))
+            q_coin_completions.append((index + 1) + table.base_ID) # Q Coin item IDs are 1-indexed
+
+    # Send newly completed location checks to the AP server
+    if q_coin_completions:
+        await ctx.send_msgs([{"cmd": "LocationChecks", "locations": q_coin_completions}])
 
 async def check_shop_purchase_completions(ctx: RTAContext):
     table = Addresses.shop_purchases
@@ -802,7 +843,7 @@ async def handle_rta(ctx: RTAContext):
             patch_rta_no_slot_data(ctx.pine)
             logger.info("Road Trip AP memory patch successful! Load an AP save or start a new game to continue.")
         if ctx.reset_post_connect_patches:
-            patch_rta_post_connect(ctx.pine, ctx.shop_strings, ctx.area_unlock_mode, ctx.parts_cost_modifier, ctx.parts_cost_maximum, ctx.auto_unlock_warps)
+            patch_rta_post_connect(ctx.pine, ctx.shop_strings, ctx.area_unlock_mode, ctx.parts_cost_modifier, ctx.parts_cost_maximum, ctx.auto_unlock_warps, ctx.randomize_q_coins, ctx.q_coins_needed_per_coine_reward)
             logger.info("Patches requiring slot data successful!")
             ctx.reset_post_connect_patches = False
 
@@ -824,6 +865,8 @@ async def handle_rta(ctx: RTAContext):
         await check_NPC_reward_completions(ctx)
         await check_license_completions(ctx)
         await check_world_grand_prix_completion(ctx)
+        if ctx.randomize_q_coins == True:
+            await check_q_coin_completions(ctx)
 
         print() # DEBUG
 

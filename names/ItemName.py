@@ -359,6 +359,9 @@ Progressive_License = "Progressive License"
 # Stamp
 Stamp = "Stamp"
 
+# Q Coin
+Q_Coin = "Q Coin"
+
 # Progressive Parts
 Progressive_Tires = "Progressive Tires"
 Progressive_Engine = "Progressive Engine"

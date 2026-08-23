@@ -49,6 +49,29 @@ class AdditionalProgressivePartTracks(Range):
     range_end = 2
     default = 2  
 
+class RandomizeQCoins(Toggle):
+    """Randomize the 100 Q Coins into the multiworld.
+
+    Picking up a Q Coin will send out a randomized item instead."""
+    display_name = "Randomize Q Coins"
+    default: 0
+
+class QCoinsNeededPerCoineReward(Range):
+    """Set the number of Q coins needed to reach the next reward from Coine in My City.
+
+    In the vanilla game, Coine gives one reward per 10 coins. (10 rewards * 10 coins per reward = 100 coins total)
+
+    Reduce this number to speed up the process of receiving rewards from Coine, and to lower the total number of coins
+    needed to collect all rewards.
+
+    e.g. If set to 2, Coine will give a reward for every other coin, with a maximum of 20 needed to get all 10 rewards.
+
+    If 'Randomize Q Coins' is enabled, all coins beyond those needed to receive all 10 rewards will be classified as Filler."""
+    display_name = "Q Coins Needed Per Coine Reward"
+    range_start = 1
+    range_end = 10
+    default = 10
+
 class PrioritizeGoodRewardsForRaces(Range):
     """Set the percent chance that a race will be forced to have a Progression item. (Rolled separately for each race.)
 
@@ -127,9 +150,15 @@ class RoadTripOptions(PerGameCommonOptions):
     parts_cost_modifier:                      PartsCostModifier
     parts_cost_maximum:                       PartsCostMaximum
     auto_unlock_warps:                        AutoUnlockWarps
+    randomize_q_coins:                        RandomizeQCoins
+    q_coins_needed_per_coine_reward:          QCoinsNeededPerCoineReward
 
 def get_RTA_options(multiworld: MultiWorld, player : int) -> RoadTripOptions:
     options = multiworld.worlds[player].options
     assert options, "getRoadTripOptions returned None"
     
     return options
+
+def get_q_coin_filler_count(multiworld: MultiWorld, player : int) -> int:
+    options = get_RTA_options(multiworld, player)
+    return 100 - (options.q_coins_needed_per_coine_reward * 10)
