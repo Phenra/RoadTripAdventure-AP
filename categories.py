@@ -218,7 +218,7 @@ def generate_location_name_groups() -> dict[str, set[str]]:
             LocationName.Duck_Quiz_3,
             get_combined_double_up_stamp_name(LocationName.Duck_Quiz_3),
         },
-        "Overworld Items": set(locations.overworld_items),
+        "Overworld Items": set(locations.overworld_items.keys()),
         "Gemstones": {
             LocationName.Blue_Sapphire,
             LocationName.Emerald,
@@ -228,9 +228,21 @@ def generate_location_name_groups() -> dict[str, set[str]]:
             LocationName.Moonstone,
             LocationName.Amethyst,
         },
-        "Shop Purchases": set(locations.shop_purchases),
-        "Licenses": set(locations.licenses),
+        "Shop Purchases": set(locations.shop_purchases.keys()),
+        "Licenses": set(locations.licenses.keys()),
+        "Visit All Houses Stamps": visit_all_houses_stamps
     }
+
+visit_all_houses_stamps : set[str] = {
+    LocationName.Stamp_1,   # Peach Town
+    LocationName.Stamp_10,  # Fuji City
+    LocationName.Stamp_23,  # Sandpolis
+    LocationName.Stamp_52,  # Chestnut Canyon
+    LocationName.Stamp_60,  # White Mountain
+    LocationName.Stamp_72,  # Papaya Island
+    LocationName.Stamp_85,  # Cloud Hill
+    LocationName.Stamp_91   # Mushroom Road
+}
 
 challenge_minigames : set[str] = {
     LocationName.Stamp_6,   # Barrel Dodging
