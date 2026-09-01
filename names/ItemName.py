@@ -1,6 +1,5 @@
 # Filler item
-from ..options import FILLER_AMOUNT
-Filler = f"{FILLER_AMOUNT}G"
+Filler = "Money"
 
 # Bodies
 Body_Q001 = "Body Q001"

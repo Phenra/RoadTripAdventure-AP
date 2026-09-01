@@ -139,6 +139,15 @@ class AutoUnlockWarps(Toggle):
     display_name = "Auto Unlock Warps"
     default: 0
 
+class MoneyFillerAmount(Range):
+    """In Road Trip AP, any additional locations without an item are filled with money.
+    
+    Set the amount of money received from these filler items."""
+    display_name = "Money Filler Amount"
+    default = 500
+    range_start = 100
+    range_end = 10000
+
 @dataclass
 class RoadTripOptions(PerGameCommonOptions):
     area_unlock_mode:                         AreaUnlockMode
@@ -152,6 +161,7 @@ class RoadTripOptions(PerGameCommonOptions):
     auto_unlock_warps:                        AutoUnlockWarps
     randomize_q_coins:                        RandomizeQCoins
     q_coins_needed_per_coine_reward:          QCoinsNeededPerCoineReward
+    money_filler_amount:                      MoneyFillerAmount
 
 def get_RTA_options(multiworld: MultiWorld, player : int) -> RoadTripOptions:
     options = multiworld.worlds[player].options

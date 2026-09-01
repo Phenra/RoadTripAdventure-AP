@@ -184,7 +184,7 @@ class RoadTripWorld(World):
         # slot_data contains the data we pass to the client (that is not already accessible through server API calls)
         slot_data = {
             "gen_world_version": self.world_version.as_simple_string(),
-            "filler_amount": FILLER_AMOUNT,
+            "filler_amount": int(self.options.money_filler_amount),
             "save_id": self.random.getrandbits(32),
             "shop_strings": get_shop_strings(self),
             "area_unlock_mode": int(self.options.area_unlock_mode),
