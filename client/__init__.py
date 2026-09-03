@@ -121,6 +121,7 @@ class RTAContext(CommonContext):
     quick_patch_check_failed = False
     randomize_q_coins = False
     q_coins_needed_per_coine_reward = 10
+    require_world_grand_prix = True
 
     # Overriding the default run_gui function in order to set the title of the client window.
     # Taken from the Adventure Client. RaC2's client seems to use basically the same function as well.
@@ -167,6 +168,7 @@ class RTAContext(CommonContext):
             self.auto_unlock_warps = args['slot_data'].get('auto_unlock_warps', self.auto_unlock_warps)
             self.randomize_q_coins = args['slot_data'].get('randomize_q_coins', self.randomize_q_coins)
             self.q_coins_needed_per_coine_reward = args['slot_data'].get('q_coins_needed_per_coine_reward', self.q_coins_needed_per_coine_reward)
+            self.require_world_grand_prix = args['slot_data'].get('require_world_grand_prix', self.require_world_grand_prix)
 
             self.reset_post_connect_patches = True
 
@@ -507,8 +509,17 @@ def handle_received_items(self : RTAContext):
                 else:
                     update_inventory(self, item_name)
 
+                # Handle warp unlocks
                 if (item_name in decoration_progression_only or item_name == ItemName.Stamp) and self.auto_unlock_warps == True:
                     unlock_warp(self, item_name)
+                
+                # Handle White House unlock on collecting final license (if 'Require World Grand Prix' is set to False)
+                if (item_name == ItemName.Progressive_License and self.require_world_grand_prix == False):
+                    licenses_received = len([x.item for x in self.items_received if x.item == item.item])
+                    licenses_not_yet_sent_to_game = len([x.item for x in items_to_send[index:] if x.item == item.item])
+                    new_license_count = licenses_received - (licenses_not_yet_sent_to_game - 1)
+                    if new_license_count >= Addresses.NUM_LICENSES:
+                        unlock_white_house_gate(self)
 
             self.pine.write_int16(Addresses.ap_item_index.address, len(self.items_received) + 1)
         
@@ -649,6 +660,20 @@ def unlock_warp(self : RTAContext, item_name : str | None):
     address = table.address
     num_bytes = table.length // BITS_IN_BYTE
     self.pine.write_bytes(address, new_bytes)
+
+def unlock_white_house_gate(self : RTAContext):
+    pine = self.pine
+
+    table = Addresses.event_flags
+
+    # Read from PCSX2 memory
+    address = table.address
+    num_bytes = table.length
+    data = pine.read_bytes(address, num_bytes)
+
+    data = set_bit(data, 26) # 'Open White House gate' is bit 26
+
+    pine.write_bytes(address, data)
 
 def increment_stamp_count(self : RTAContext):
     pine = self.pine

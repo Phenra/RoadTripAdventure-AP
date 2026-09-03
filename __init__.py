@@ -45,7 +45,7 @@ from Utils import visualize_regions
 
 # Local imports
 from .names import ItemName
-from .options import RoadTripOptions, get_RTA_options, AreaUnlockMode, FILLER_AMOUNT
+from .options import RoadTripOptions, get_RTA_options, AreaUnlockMode
 from .items import item_table, create_items_RTA, create_item_RTA
 from .locations import location_table, create_locations_RTA, get_double_up_stamp_name, get_double_up_stamp_id
 from .regions import create_regions_RTA
@@ -194,6 +194,7 @@ class RoadTripWorld(World):
             "auto_unlock_warps": bool(self.options.auto_unlock_warps),
             "randomize_q_coins": bool(self.options.randomize_q_coins),
             "q_coins_needed_per_coine_reward": int(self.options.q_coins_needed_per_coine_reward),
+            "require_world_grand_prix": bool(self.options.require_world_grand_prix),
         }
         return slot_data
 

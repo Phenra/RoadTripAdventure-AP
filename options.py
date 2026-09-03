@@ -3,11 +3,8 @@ from dataclasses import dataclass
 from BaseClasses import MultiWorld
 from Options import Choice, Toggle, Range, PerGameCommonOptions
 
-FILLER_AMOUNT = 500
-
 # TODO: Add president skip logic option
-# TODO: Add Q coin and Quick-Pic shop options
-# TODO: Add option for 'no logic gating' mode (with big disclaimer to not use it without permission of everyone in the multiworld)
+# TODO: Add Quick-Pic rando option
 # TODO: Add option for non-progressive parts
 # TODO: Add an option to nerf the Jet Turbine (double gas usage, maybe triple?)
 # TODO: Add room randomizer and NPC randomizer options once they are stable in-game
@@ -54,7 +51,7 @@ class RandomizeQCoins(Toggle):
 
     Picking up a Q Coin will send out a randomized item instead."""
     display_name = "Randomize Q Coins"
-    default: 0
+    default = 0
 
 class QCoinsNeededPerCoineReward(Range):
     """Set the number of Q coins needed to reach the next reward from Coine in My City.
@@ -137,7 +134,19 @@ class AutoUnlockWarps(Toggle):
     """Automatically unlock the ability to warp to a town's Q's Factory when you gain access to it.
     """
     display_name = "Auto Unlock Warps"
-    default: 0
+    default = 0
+
+class RequireWorldGrandPrix(Toggle):
+    """Require the World Grand Prix to be completed before the White House can be entered.
+
+    Setting this to False will cause the White House gate to open automatically once all Progressive
+    Licenses are obtained.
+
+    If this option is set to False, and License Handling is set to 'Remove', the White House can be entered
+    immediately once Cloud Hill can be accessed.
+    """
+    display_name = "Require World Grand Prix"
+    default = 1
 
 class MoneyFillerAmount(Range):
     """In Road Trip AP, any additional locations without an item are filled with money.
@@ -161,6 +170,7 @@ class RoadTripOptions(PerGameCommonOptions):
     auto_unlock_warps:                        AutoUnlockWarps
     randomize_q_coins:                        RandomizeQCoins
     q_coins_needed_per_coine_reward:          QCoinsNeededPerCoineReward
+    require_world_grand_prix:                 RequireWorldGrandPrix
     money_filler_amount:                      MoneyFillerAmount
 
 def get_RTA_options(multiworld: MultiWorld, player : int) -> RoadTripOptions:
