@@ -629,7 +629,9 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_72: LocationData(BASE_IDS.STAMPS + 71, RegionName.Base.Papaya_Island,
         access_rule = lambda state, player:
             state.can_reach_region(RegionName.Base.Papaya_Island_Upper, player) and 
-            state.can_reach_region(RegionName.Base.Papaya_Island_Island, player) 
+            state.can_reach_region(RegionName.Base.Papaya_Island_Island, player) and
+            state.can_reach_region(RegionName.White_Mountain_NPC_Shirley, player) and # Shirley must be home for visiting her house to count
+            state.has(ItemName.Uzumasas_Autograph, player) # Giving this to Shirley causes her to return to her home in Papaya
     ),
     LocationName.Stamp_73: LocationData(BASE_IDS.STAMPS + 72, RegionName.Papaya_Island_Luke_House),
     LocationName.Stamp_74: LocationData(BASE_IDS.STAMPS + 73, RegionName.Papaya_Island_Grandpa_Costello_House),
