@@ -300,30 +300,22 @@ Angels_Wings = "Angel's Wings"
 Gods_Rod = "God's Rod"
 
 # Area Unlock Keys
-# -- Peach Town (provided by default)
-Local_Peach_Wine_Key = Local_Peach_Wine + " (Key)"
-Peach_Doll_Key = Peach_Doll + " (Key)"
-# -- Fuji City
-Gold_Ornament_Key = Gold_Ornament + " (Key)"
-Policemans_Club_Key = Policemans_Club + " (Key)"
-# -- Sandpolis
-Mini_Tower_Key = Mini_Tower + " (Key)"
-Toy_Gun_Key = Toy_Gun + " (Key)"
-# -- Chestnut Canyon
-M_Cartons_Painting_Key = M_Cartons_Painting + " (Key)"
-Model_Train_Key = Model_Train + " (Key)"
-# -- Mushroom Road
-Flower_Pattern_Key = Flower_Pattern + " (Key)"
-Sky_Pattern_Key = Sky_Pattern + " (Key)"
-# -- White Mountain
-Christmas_Tree_Key = Christmas_Tree + " (Key)"
-Arctic_Pattern_Key = Arctic_Pattern + " (Key)"
-# -- Papaya Island
-UnbaboDoll_Key = UnbaboDoll + " (Key)"
-Papaya_Ukulele_Key = Papaya_Ukulele + " (Key)"
-# -- Cloud Hill
-Angels_Wings_Key = Angels_Wings + " (Key)"
-Gods_Rod_Key = Gods_Rod + " (Key)"
+Local_Peach_Wine_Key = Local_Peach_Wine + " (Peach Town Key)"
+Peach_Doll_Key = Peach_Doll + " (Peach Town Key)"
+Gold_Ornament_Key = Gold_Ornament + " (Fuji City Key)"
+Policemans_Club_Key = Policemans_Club + " (Fuji City Key)"
+Mini_Tower_Key = Mini_Tower + " (Sandpolis Key)"
+Toy_Gun_Key = Toy_Gun + " (Sandpolis Key)"
+M_Cartons_Painting_Key = M_Cartons_Painting + " (Chestnut Canyon Key)"
+Model_Train_Key = Model_Train + " (Chestnut Canyon Key)"
+Flower_Pattern_Key = Flower_Pattern + " (Mushroom Road Key)"
+Sky_Pattern_Key = Sky_Pattern + " (Mushroom Road Key)"
+Christmas_Tree_Key = Christmas_Tree + " (White Mountain Key)"
+Arctic_Pattern_Key = Arctic_Pattern + " (White Mountain Key)"
+UnbaboDoll_Key = UnbaboDoll + " (Papaya Island Key)"
+Papaya_Ukulele_Key = Papaya_Ukulele + " (Papaya Island Key)"
+Angels_Wings_Key = Angels_Wings + " (Cloud Hill Key)"
+Gods_Rod_Key = Gods_Rod + " (Cloud Hill Key)"
 
 # Collectibles
 Wallet = "Wallet"

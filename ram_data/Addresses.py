@@ -333,10 +333,16 @@ inventory_table_data = [
     inventory_money,
 ]
 
+def remove_key_parenthetical_from_item_name(item_name : str) -> str:
+    if item_name.endswith(" Key)"):
+        full_key_str = " (" + item_name.split("(")[-1] # Get the full parenthetical, e.g. " (Cloud Hill Key)"
+        item_name = item_name.replace(full_key_str, "") # Remove it from the string
+    return item_name
+
 def get_table_data_for_part(item_name : str) -> TableData:
     # For the decoration key items, remove "key" from the string
     # These are stored in the same location in-game as the non-key versions
-    item_name = item_name.replace(" (Key)", "")
+    item_name = remove_key_parenthetical_from_item_name(item_name)
 
     item_base_ID = item_name_to_base_ID(item_name)
     
@@ -349,7 +355,7 @@ def get_table_data_for_part(item_name : str) -> TableData:
 def get_bit_to_update(item_name : str) -> int:
     # For the decoration key items, remove "key" from the string
     # These are stored in the same location in-game as the non-key versions
-    item_name = item_name.replace(" (Key)", "")
+    item_name = remove_key_parenthetical_from_item_name(item_name)
 
     item_base_ID = item_name_to_base_ID(item_name)
     item_ID = all_item_table[item_name].id
