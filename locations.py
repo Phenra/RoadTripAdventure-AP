@@ -713,25 +713,7 @@ stamps : dict[str, LocationData] = {
     LocationName.Stamp_99: LocationData(BASE_IDS.STAMPS + 98, RegionName.UFO),
     LocationName.Stamp_100: LocationData(BASE_IDS.STAMPS + 99, RegionName.Cloud_Hill_President_Room, # Victory condition
         access_rule = lambda state, player:
-            state.can_reach_location(LocationName.World_GP_Completed, player) and
-            has_license_count(3, state, player) and
-            ((
-                state.has(ItemName.Jet_Turbine, player) and
-                has_tires_of_level(9, state, player) and
-                has_engine_of_level(5, state, player) and
-                has_chassis_of_level(2, state, player) and
-                has_transmission_of_level(2, state, player) and
-                has_steering_of_level(2, state, player) and
-                has_brakes_of_level(2, state, player)
-            ) or
-            (
-                has_tires_of_level(11, state, player) and
-                has_engine_of_level(7, state, player) and
-                has_chassis_of_level(4, state, player) and
-                has_transmission_of_level(5, state, player) and
-                has_steering_of_level(3, state, player) and
-                has_brakes_of_level(3, state, player)
-            ))
+            can_clear_president_race(state, player)
     ),
 }
 

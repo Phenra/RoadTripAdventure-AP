@@ -116,7 +116,8 @@ def q_coins_accessible(state: CollectionState, player: int) -> int:
         coin_count += q_coins_per_region.get(region, 0)
 
     # Test for coins that have access rules
-    if RegionName.Base.Sandpolis in accessible_regions and state.can_reach_location(LocationName.Q_Coin_43, player) == False: # Atop Pyramid
+    #if RegionName.Base.Sandpolis in accessible_regions and state.can_reach_location(LocationName.Q_Coin_43, player) == False: # Atop Pyramid
+    if RegionName.Base.Sandpolis in accessible_regions and not can_access_top_of_pyramids(state, player): # Using this instead, as using the access rule for location Q_Coin_43 will result in a generation failure if Q coin rando is disabled
         coin_count -= 1
 
     return coin_count
@@ -297,3 +298,30 @@ def can_access_all_quick_pic_shops(state: CollectionState, player: int) -> bool:
 
 def can_access_top_of_pyramids(state: CollectionState, player: int) -> bool:
     return has_tires_of_level(10, state, player) # Big Tires, to drive up the pyramid
+
+def can_clear_president_race(state: CollectionState, player: int) -> bool:
+    grand_prix_required = state.multiworld.worlds[player].options.require_world_grand_prix
+
+    if grand_prix_required:
+        if not state.can_reach_location(LocationName.World_GP_Completed, player):
+            return False
+
+    return (
+        has_license_count(3, state, player) and
+        ((
+            state.has(ItemName.Jet_Turbine, player) and
+            has_tires_of_level(9, state, player) and
+            has_engine_of_level(5, state, player) and
+            has_chassis_of_level(2, state, player) and
+            has_transmission_of_level(2, state, player) and
+            has_steering_of_level(2, state, player) and
+            has_brakes_of_level(2, state, player)
+        ) or
+        (
+            has_tires_of_level(11, state, player) and
+            has_engine_of_level(7, state, player) and
+            has_chassis_of_level(4, state, player) and
+            has_transmission_of_level(5, state, player) and
+            has_steering_of_level(3, state, player) and
+            has_brakes_of_level(3, state, player)
+        )))
