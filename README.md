@@ -33,6 +33,7 @@ Archipelago is a multi-game randomizer that can shuffle items from one game into
 - All overworld items (gemstones, the fountain pen, etc.)
 - All license upgrades
 - Stamps (only if the Area Unlock Mode is set to Stamps)
+- Q Coins (only if randomizing Q Coins is enabled)
 - Empty locations are filled with 500 money
 
 ### Locations
@@ -41,6 +42,7 @@ Archipelago is a multi-game randomizer that can shuffle items from one game into
 - Collecting an item via the overworld (except Q Coins)
 - Finishing a race in 6th place or higher
 - Receiving a license upgrade
+- Collecting a Q Coin (only if randomizing Q Coins is enabled)
 - Completing a stamp 
 
 ## How to Play
@@ -52,5 +54,3 @@ Set the [setup guide](./docs/setup_en.md) for instructions.
 - Are there plans to support PAL and/or NTSC-J?
     - Maybe, TBD. If I do, it will likely be a while until they are supported.
     - Uncertain on NTSC-J support in particular, as it likely differs more from NTSC-U internally than PAL.
-- Are there plans to add Q coins and Quick-Pic shops as items/locations?
-    - Yes! It's one of the higher-priority things on my list.
