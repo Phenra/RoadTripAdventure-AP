@@ -54,3 +54,7 @@ Set the [setup guide](./docs/setup_en.md) for instructions.
 - Are there plans to support PAL and/or NTSC-J?
     - Maybe, TBD. If I do, it will likely be a while until they are supported.
     - Uncertain on NTSC-J support in particular, as it likely differs more from NTSC-U internally than PAL.
+
+## Special Thanks
+- [Mholeys](https://github.com/mholeys): For creating the [interactive HG2 world map](https://mholeys.github.io/roadtrip-choroq-map/). The region display in particular saved me tons of time.
+- The [ChoroQ Wiki](https://choroq.fandom.com/wiki/Choro_Q_Wiki), as well as [roadtripguide.info](https://www.roadtripguide.info/): For being very helpful references on game details.
