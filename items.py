@@ -391,7 +391,7 @@ garage_decorations = {
 
 area_unlocks = {
     ItemName.Local_Peach_Wine_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 10, 1, ItemClassification.progression), # Peach Town unlock (given at start)
-    ItemName.Peach_Doll_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 11, 1, ItemClassification.progression), # Peach Town unlock (given at start)    
+    ItemName.Peach_Doll_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 11, 1, ItemClassification.progression), # Peach Town unlock (given at start)
     ItemName.Gold_Ornament_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 12, 1, ItemClassification.progression), # Fuji City unlock
     ItemName.Policemans_Club_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 13, 1, ItemClassification.progression), # Fuji City unlock
     ItemName.Mini_Tower_Key: ItemData(BASE_IDS.AREA_UNLOCKS + 14, 1, ItemClassification.progression), # Sandpolis unlock

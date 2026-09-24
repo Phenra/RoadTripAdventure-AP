@@ -902,7 +902,7 @@ items_received : dict[str, LocationData] = {
         access_rule = lambda state, player:
             state.has(ItemName.Relief, player)
     ),
-    LocationName.Trade_Quest_5: LocationData(BASE_IDS.ITEMS + 284, RegionName.Papaya_Island_Shirley_House, # Gives Rice Ball in vanilla
+    LocationName.Trade_Quest_5: LocationData(BASE_IDS.ITEMS + 284, RegionName.White_Mountain_NPC_Shirley, # Gives Rice Ball in vanilla
         access_rule = lambda state, player:
             state.has(ItemName.Uzumasas_Autograph, player)
     ),
