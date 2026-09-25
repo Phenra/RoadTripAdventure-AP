@@ -137,12 +137,12 @@ class AutoUnlockWarps(Toggle):
     default = 0
 
 class RequireWorldGrandPrix(Toggle):
-    """Require the World Grand Prix to be completed before the White House can be entered.
+    """Require the World Grand Prix to be completed before the president's mansion can be entered.
 
-    Setting this to False will cause the White House gate to open automatically once all Progressive
+    Setting this to False will cause the mansion gate to open automatically once all Progressive
     Licenses are obtained.
 
-    If this option is set to False, and License Handling is set to 'Remove', the White House can be entered
+    If this option is set to False, and License Handling is set to 'Remove', the mansion can be entered
     immediately once Cloud Hill can be accessed.
     """
     display_name = "Require World Grand Prix"
@@ -151,7 +151,7 @@ class RequireWorldGrandPrix(Toggle):
 class MoneyFillerAmount(Range):
     """In Road Trip AP, any additional locations without an item are filled with money.
     
-    Set the amount of money received from these filler items."""
+    Set the amount of money received from one of these filler items."""
     display_name = "Money Filler Amount"
     default = 500
     range_start = 100

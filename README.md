@@ -39,10 +39,10 @@ Archipelago is a multi-game randomizer that can shuffle items from one game into
 ### Locations
 - Purchasing an item from the parts shop for the first time
 - Receiving an item via dialogue
-- Collecting an item via the overworld (except Q Coins)
+- Collecting an item via the overworld
+    - Includes Q Coins if 'Randomize Q Coins' is enabled
 - Finishing a race in 6th place or higher
 - Receiving a license upgrade
-- Collecting a Q Coin (only if randomizing Q Coins is enabled)
 - Completing a stamp 
 
 ## How to Play
